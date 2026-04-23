@@ -1850,15 +1850,22 @@
       ].filter(value => value !== undefined && value !== null && value !== "").join(" ");
     }
 
+    function matchesLogSearch(entry, query) {
+      if (!query) return true;
+
+      if (query === "YES" || query === "NO") {
+        return normalize(entry.quoteProvided) === query;
+      }
+
+      return normalize(searchableEntryText(entry)).includes(query);
+    }
+
     function renderRows() {
       const query = normalize(searchBox.value);
       const filtered = entries
         .slice()
         .sort((a, b) => String(b.timestamp).localeCompare(String(a.timestamp)))
-        .filter(entry => {
-          if (!query) return true;
-          return normalize(searchableEntryText(entry)).includes(query);
-        });
+        .filter(entry => matchesLogSearch(entry, query));
 
       entryRows.innerHTML = filtered.map(entry => {
         const typeClass = entry.entryType === "Sale" ? "sale" : "quote";
