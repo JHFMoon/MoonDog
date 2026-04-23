@@ -480,23 +480,43 @@
 
     @media (max-width: 640px) {
       body {
-        background: #f3f6f8;
+        background: #eef3f6;
       }
 
       header {
-        padding: 14px 12px;
+        padding: calc(10px + env(safe-area-inset-top)) 14px 12px;
+        border-bottom-width: 4px;
       }
 
       h1 {
-        font-size: 25px;
+        font-size: 24px;
+        line-height: 1.1;
       }
 
       .subtitle {
         font-size: 13px;
       }
 
+      .topline {
+        gap: 10px;
+      }
+
+      .ticket-total {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        align-items: center;
+        gap: 10px;
+        min-width: 0;
+        padding: 10px 12px;
+        text-align: left;
+      }
+
+      .ticket-total strong {
+        font-size: 28px;
+      }
+
       main {
-        padding: 10px 10px 28px;
+        padding: 10px 8px calc(72px + env(safe-area-inset-bottom));
       }
 
       section,
@@ -504,29 +524,112 @@
         box-shadow: none;
       }
 
+      section {
+        border-radius: 7px;
+      }
+
+      .leaderboard {
+        display: flex;
+        gap: 8px;
+        overflow-x: auto;
+        margin: 0 0 10px;
+        padding: 0 2px 2px;
+        scroll-snap-type: x proximity;
+      }
+
+      .leader {
+        flex: 0 0 78%;
+        min-height: 86px;
+        padding: 12px;
+        scroll-snap-align: start;
+      }
+
+      .leader strong {
+        font-size: 20px;
+      }
+
+      .leader small {
+        display: block;
+        margin-top: 4px;
+        font-size: 13px;
+      }
+
       .form-panel {
-        padding: 14px;
+        padding: 16px 14px;
+      }
+
+      h2 {
+        margin-bottom: 16px;
+        font-size: 20px;
+      }
+
+      form {
+        gap: 15px;
+      }
+
+      label {
+        gap: 7px;
+        font-size: 13px;
+      }
+
+      input,
+      select,
+      textarea {
+        min-height: 58px;
+        border-radius: 7px;
+        padding: 15px 13px;
+        font-size: 17px;
+      }
+
+      textarea {
+        min-height: 82px;
+      }
+
+      input[type="file"] {
+        padding: 12px;
+        min-height: 62px;
+      }
+
+      .photo-preview {
+        max-height: 220px;
+      }
+
+      .status,
+      .save-status,
+      .connection-lock,
+      .browser-warning {
+        padding: 13px;
+        font-size: 14px;
       }
 
       .actions {
         display: grid;
-        grid-template-columns: 1fr;
+        grid-template-columns: minmax(0, 1fr) minmax(96px, .5fr);
         width: 100%;
+        gap: 10px;
       }
 
       .actions button {
         width: 100%;
+        min-height: 58px;
+        padding: 15px;
+        font-size: 16px;
       }
 
       .toolbar {
         display: grid;
         grid-template-columns: 1fr;
-        padding: 12px;
+        padding: 14px;
+        gap: 12px;
       }
 
       .toolbar input {
         max-width: none;
         min-width: 0;
+      }
+
+      .toolbar .actions {
+        grid-template-columns: 1fr 1fr;
       }
 
       .table-wrap {
@@ -545,7 +648,7 @@
 
       table {
         border-collapse: separate;
-        border-spacing: 0 10px;
+        border-spacing: 0 12px;
       }
 
       thead {
@@ -561,11 +664,12 @@
 
       td {
         display: grid;
-        grid-template-columns: 104px minmax(0, 1fr);
-        gap: 10px;
-        padding: 10px 12px;
+        grid-template-columns: 112px minmax(0, 1fr);
+        gap: 12px;
+        padding: 12px 13px;
         border-bottom: 1px solid #edf1f4;
         word-break: break-word;
+        font-size: 15px;
       }
 
       td::before {
@@ -578,6 +682,34 @@
 
       td:last-child {
         border-bottom: 0;
+      }
+
+      .empty {
+        padding: 18px 12px;
+      }
+
+      .note {
+        font-size: 13px;
+      }
+    }
+
+    @media (max-width: 380px) {
+      main {
+        padding-left: 6px;
+        padding-right: 6px;
+      }
+
+      .form-panel {
+        padding: 14px 12px;
+      }
+
+      .actions,
+      .toolbar .actions {
+        grid-template-columns: 1fr;
+      }
+
+      td {
+        grid-template-columns: 96px minmax(0, 1fr);
       }
     }
   </style>
