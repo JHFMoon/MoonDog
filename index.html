@@ -155,6 +155,14 @@
       gap: 10px;
     }
 
+    .row.three {
+      grid-template-columns: repeat(3, 1fr);
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
     .status {
       display: none;
       padding: 10px 12px;
@@ -245,7 +253,7 @@
     table {
       width: 100%;
       border-collapse: collapse;
-      min-width: 860px;
+      min-width: 1180px;
     }
 
     th,
@@ -462,7 +470,8 @@
     @media (max-width: 880px) {
       .layout,
       .leaderboard,
-      .row {
+      .row,
+      .row.three {
         grid-template-columns: 1fr;
       }
 
@@ -853,7 +862,7 @@
             </label>
           </div>
 
-          <label>
+          <label class="quote-only">
             Tire Measurement
             <select id="tireMeasurement" name="tireMeasurement" required>
               <option value="">Select measurement</option>
@@ -876,13 +885,123 @@
             </select>
           </label>
 
-          <label>
-            Notes
-            <textarea id="proofNotes" name="proofNotes" placeholder="Optional: tire issue or advisor"></textarea>
-          </label>
+          <div class="row quote-only">
+            <label>
+              Passenger / LT
+              <select id="tireClass" name="tireClass" required>
+                <option value="">Select</option>
+                <option value="P">P</option>
+                <option value="LT">LT</option>
+              </select>
+            </label>
+            <label>
+              Section Width
+              <select id="sectionWidth" name="sectionWidth" required>
+                <option value="">Select width</option>
+                <option value="145">145</option>
+                <option value="155">155</option>
+                <option value="165">165</option>
+                <option value="175">175</option>
+                <option value="185">185</option>
+                <option value="195">195</option>
+                <option value="205">205</option>
+                <option value="215">215</option>
+                <option value="225">225</option>
+                <option value="235">235</option>
+                <option value="245">245</option>
+                <option value="255">255</option>
+                <option value="265">265</option>
+                <option value="275">275</option>
+                <option value="285">285</option>
+                <option value="295">295</option>
+                <option value="305">305</option>
+                <option value="315">315</option>
+                <option value="325">325</option>
+                <option value="335">335</option>
+              </select>
+            </label>
+          </div>
+
+          <div class="row three quote-only">
+            <label>
+              Aspect Ratio
+              <select id="aspectRatio" name="aspectRatio" required>
+                <option value="">Select ratio</option>
+                <option value="25">25</option>
+                <option value="30">30</option>
+                <option value="35">35</option>
+                <option value="40">40</option>
+                <option value="45">45</option>
+                <option value="50">50</option>
+                <option value="55">55</option>
+                <option value="60">60</option>
+                <option value="65">65</option>
+                <option value="70">70</option>
+                <option value="75">75</option>
+                <option value="80">80</option>
+                <option value="85">85</option>
+              </select>
+            </label>
+            <label>
+              Rim Size
+              <select id="rimSize" name="rimSize" required>
+                <option value="">Select rim</option>
+                <option value="12">12</option>
+                <option value="13">13</option>
+                <option value="14">14</option>
+                <option value="15">15</option>
+                <option value="16">16</option>
+                <option value="17">17</option>
+                <option value="18">18</option>
+                <option value="19">19</option>
+                <option value="20">20</option>
+                <option value="21">21</option>
+                <option value="22">22</option>
+                <option value="23">23</option>
+                <option value="24">24</option>
+              </select>
+            </label>
+            <label>
+              Speed Rating
+              <select id="speedRating" name="speedRating" required>
+                <option value="">Select speed</option>
+                <option value="Q">Q</option>
+                <option value="R">R</option>
+                <option value="S">S</option>
+                <option value="T">T</option>
+                <option value="H">H</option>
+                <option value="V">V</option>
+                <option value="W">W</option>
+                <option value="Y">Y</option>
+              </select>
+            </label>
+          </div>
+
+          <div class="row quote-only">
+            <label>
+              Load Rating
+              <select id="loadRating" name="loadRating" required>
+                <option value="">Select load</option>
+                <option value="SL">SL</option>
+                <option value="XL">XL</option>
+                <option value="C">C</option>
+                <option value="D">D</option>
+                <option value="E">E</option>
+                <option value="F">F</option>
+              </select>
+            </label>
+            <label>
+              Quote Printed / Advisor
+              <select id="quoteProvided" name="quoteProvided" required>
+                <option value="">Select status</option>
+                <option value="Yes">Yes - printed and provided</option>
+                <option value="No">No - not yet</option>
+              </select>
+            </label>
+          </div>
 
           <label>
-            Proof Photo
+            <span id="photoLabelText">Proof Photo</span>
             <input id="proofPhoto" name="proofPhoto" type="file" accept="image/*" capture="environment">
             <img id="photoPreview" class="photo-preview" alt="Proof photo preview">
           </label>
@@ -894,14 +1013,14 @@
             <button type="button" class="secondary" id="clearForm">Clear</button>
           </div>
         </form>
-        <p class="note">Parking-lot workflow: tag number is fastest, last 8 VIN is the stronger backup, and RO can be added later by an advisor or manager. Matching or near-matching records are blocked from submission.</p>
+        <p class="note">Quote entries require tag, VIN, tire measurement, tire identifiers, and quote status. Sale involvement requires RO, VIN, and an RO photo; tag and tire details are optional for sales.</p>
         <div id="saveStatus" class="save-status" aria-live="polite">Checking phone storage...</div>
       </section>
 
       <section aria-labelledby="logTitle">
         <div class="toolbar">
           <h2 id="logTitle">Contest Log</h2>
-          <input id="searchBox" placeholder="Search porter, tag, VIN, RO, advisor">
+          <input id="searchBox" placeholder="Search porter, tag, VIN, RO, tire size">
           <div class="actions">
             <button type="button" class="primary" id="drawWinner">Draw Winner</button>
             <button type="button" class="danger" id="clearAll">Clear All</button>
@@ -921,7 +1040,8 @@
                 <th>Tag</th>
                 <th>Last 8 VIN</th>
                 <th>Tire Measurement</th>
-                <th>Notes</th>
+                <th>Tire Size</th>
+                <th>Quote Printed</th>
                 <th>Photo</th>
                 <th></th>
               </tr>
@@ -976,7 +1096,13 @@
       vinLast8: document.getElementById("vinLast8"),
       entryType: document.getElementById("entryType"),
       tireMeasurement: document.getElementById("tireMeasurement"),
-      proofNotes: document.getElementById("proofNotes"),
+      tireClass: document.getElementById("tireClass"),
+      sectionWidth: document.getElementById("sectionWidth"),
+      aspectRatio: document.getElementById("aspectRatio"),
+      rimSize: document.getElementById("rimSize"),
+      speedRating: document.getElementById("speedRating"),
+      loadRating: document.getElementById("loadRating"),
+      quoteProvided: document.getElementById("quoteProvided"),
       proofPhoto: document.getElementById("proofPhoto")
     };
 
@@ -996,6 +1122,8 @@
     const browserWarning = document.getElementById("browserWarning");
     const openBrowserButton = document.getElementById("openBrowser");
     const copyLinkButton = document.getElementById("copyLink");
+    const photoLabelText = document.getElementById("photoLabelText");
+    const quoteOnlyControls = Array.from(document.querySelectorAll(".quote-only"));
 
     let entries = [];
     let dbPromise = null;
@@ -1065,7 +1193,7 @@
       });
 
       if (enabled) {
-        updateRoAvailability();
+        updateEntryTypeRequirements();
       }
     }
 
@@ -1287,10 +1415,16 @@
       fields.roNumber.value = "";
       fields.entryType.value = "Quote";
       fields.tireMeasurement.value = "";
-      fields.proofNotes.value = "";
+      fields.tireClass.value = "";
+      fields.sectionWidth.value = "";
+      fields.aspectRatio.value = "";
+      fields.rimSize.value = "";
+      fields.speedRating.value = "";
+      fields.loadRating.value = "";
+      fields.quoteProvided.value = "";
       fields.proofPhoto.value = "";
       setSubmitBusy(false);
-      updateRoAvailability();
+      updateEntryTypeRequirements();
       dupeStatus.className = "status";
       dupeStatus.textContent = "";
       showPhotoPreview(null);
@@ -1359,11 +1493,37 @@
       return type === "Sale" ? 2 : 1;
     }
 
-    function updateRoAvailability() {
+    function updateEntryTypeRequirements() {
       const isSale = fields.entryType.value === "Sale";
+      const quoteFields = [
+        fields.tireMeasurement,
+        fields.tireClass,
+        fields.sectionWidth,
+        fields.aspectRatio,
+        fields.rimSize,
+        fields.speedRating,
+        fields.loadRating,
+        fields.quoteProvided
+      ];
+
+      quoteOnlyControls.forEach(control => {
+        control.classList.toggle("hidden", isSale);
+      });
+
+      fields.tagNumber.required = !isSale;
+      fields.tagNumber.placeholder = isSale ? "Optional for sale" : "Ex: 1234";
       fields.roNumber.disabled = !isSale;
       fields.roNumber.required = isSale;
       fields.roNumber.placeholder = isSale ? "RO required for sale" : "Quotes do not use RO";
+      fields.proofPhoto.required = isSale;
+
+      quoteFields.forEach(field => {
+        field.disabled = isSale;
+        field.required = !isSale;
+        if (isSale) field.value = "";
+      });
+
+      photoLabelText.textContent = isSale ? "RO Photo" : "Proof Photo";
 
       if (!isSale) {
         fields.roNumber.value = "";
@@ -1386,7 +1546,13 @@
         vinLast8,
         entryType,
         tireMeasurement: clean(fields.tireMeasurement.value),
-        proofNotes: clean(fields.proofNotes.value),
+        tireClass: clean(fields.tireClass.value),
+        sectionWidth: clean(fields.sectionWidth.value),
+        aspectRatio: clean(fields.aspectRatio.value),
+        rimSize: clean(fields.rimSize.value),
+        speedRating: clean(fields.speedRating.value),
+        loadRating: clean(fields.loadRating.value),
+        quoteProvided: clean(fields.quoteProvided.value),
         proofAttached: false,
         proofPhotoName: "",
         proofPhoto: "",
@@ -1460,7 +1626,7 @@
       }
 
       if (matches.length === 0) {
-        dupeStatus.textContent = "No matching tag, VIN, or RO found. This entry can be submitted with a tire measurement.";
+        dupeStatus.textContent = "No matching tag, VIN, or RO found. This entry can be submitted once the required fields are complete.";
         dupeStatus.classList.add("show", "ok");
         return;
       }
@@ -1509,6 +1675,16 @@
       }).join("");
     }
 
+    function formatTireSize(entry) {
+      if (!entry || entry.entryType === "Sale") return "";
+      const requiredParts = [entry.tireClass, entry.sectionWidth, entry.aspectRatio, entry.rimSize];
+      if (requiredParts.every(Boolean)) {
+        const service = [entry.speedRating, entry.loadRating].filter(Boolean).join(" ");
+        return `${entry.tireClass}${entry.sectionWidth}/${entry.aspectRatio}R${entry.rimSize}${service ? ` ${service}` : ""}`;
+      }
+      return "";
+    }
+
     function renderRows() {
       const query = normalize(searchBox.value);
       const filtered = entries
@@ -1531,7 +1707,8 @@
             <td data-label="Tag">${escapeHtml(entry.tagNumber)}</td>
             <td data-label="VIN">${escapeHtml(entry.vinLast8)}</td>
             <td data-label="Measurement">${escapeHtml(entry.tireMeasurement || "")}</td>
-            <td data-label="Notes">${escapeHtml(entry.proofNotes)}</td>
+            <td data-label="Tire Size">${escapeHtml(formatTireSize(entry))}</td>
+            <td data-label="Quote Printed">${escapeHtml(entry.quoteProvided || "")}</td>
             <td data-label="Photo">${entry.proofPhoto ? `<a class="photo-link" href="${entry.proofPhoto}" target="_blank" rel="noopener">View</a>` : entry.proofAttached ? "Attached" : ""}</td>
             <td data-label="Action"><button type="button" class="secondary" data-delete="${entry.id}">Delete</button></td>
           </tr>
@@ -1583,7 +1760,7 @@
     }
 
     function toCsv() {
-      const headers = ["Date", "Porter Name", "Entry Type", "Tickets", "RO Number", "Tag Number", "Last 8 VIN", "Tire Measurement", "Proof / Notes", "Review Status", "Photo Attached"];
+      const headers = ["Date", "Porter Name", "Entry Type", "Tickets", "RO Number", "Tag Number", "Last 8 VIN", "Tire Measurement", "Tire Size", "Passenger / LT", "Section Width", "Aspect Ratio", "Rim Size", "Speed Rating", "Load Rating", "Quote Printed / Advisor", "Review Status", "Photo Attached"];
       const rows = entries.map(entry => [
         entry.date,
         entry.porterName,
@@ -1593,7 +1770,14 @@
         entry.tagNumber,
         entry.vinLast8,
         entry.tireMeasurement || "",
-        entry.proofNotes,
+        formatTireSize(entry),
+        entry.tireClass || "",
+        entry.sectionWidth || "",
+        entry.aspectRatio || "",
+        entry.rimSize || "",
+        entry.speedRating || "",
+        entry.loadRating || "",
+        entry.quoteProvided || "",
         entry.reviewStatus || "Pending manager review",
         entry.proofAttached || entry.proofPhoto ? "Yes" : "No"
       ]);
@@ -1642,16 +1826,47 @@
         return;
       }
 
-      if (!candidate.tireMeasurement) {
-        alert("Tire measurement is required.");
-        fields.tireMeasurement.focus();
+      const proofFile = fields.proofPhoto.files && fields.proofPhoto.files[0];
+
+      if (candidate.entryType === "Sale" && !proofFile) {
+        alert("An RO photo is required for sale involvement entries.");
+        fields.proofPhoto.focus();
         return;
+      }
+
+      if (candidate.entryType === "Quote") {
+        if (!candidate.tagNumber) {
+          alert("Tag number is required for quote entries.");
+          fields.tagNumber.focus();
+          return;
+        }
+
+        if (!candidate.tireMeasurement) {
+          alert("Tire measurement is required for quote entries.");
+          fields.tireMeasurement.focus();
+          return;
+        }
+
+        const missingQuoteField = [
+          [fields.tireClass, "Passenger / LT is required."],
+          [fields.sectionWidth, "Section width is required."],
+          [fields.aspectRatio, "Aspect ratio is required."],
+          [fields.rimSize, "Rim size is required."],
+          [fields.speedRating, "Speed rating is required."],
+          [fields.loadRating, "Load rating is required."],
+          [fields.quoteProvided, "Quote printed/advisor status is required."]
+        ].find(([field]) => !clean(field.value));
+
+        if (missingQuoteField) {
+          alert(missingQuoteField[1]);
+          missingQuoteField[0].focus();
+          return;
+        }
       }
 
       setSubmitBusy(true);
 
       let entry;
-      const proofFile = fields.proofPhoto.files && fields.proofPhoto.files[0];
       try {
         setSaveStatus("Saving entry to shared Firebase tracker...", "warn");
         entry = getFormEntry();
@@ -1744,7 +1959,7 @@
     });
 
     fields.entryType.addEventListener("change", () => {
-      updateRoAvailability();
+      updateEntryTypeRequirements();
       updateDuplicateStatus();
     });
 
