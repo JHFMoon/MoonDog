@@ -683,7 +683,6 @@
       setDoc,
       deleteDoc,
       getDocs,
-      getDocFromServer,
       onSnapshot,
       query,
       orderBy
@@ -940,13 +939,7 @@
     }
 
     async function saveSharedEntry(entry) {
-      const entryRef = doc(entriesCollection, entry.id);
-      await setDoc(entryRef, entry);
-      const confirmed = await getDocFromServer(entryRef);
-
-      if (!confirmed.exists()) {
-        throw new Error("Firebase did not confirm the saved entry. Try again.");
-      }
+      await setDoc(doc(entriesCollection, entry.id), entry);
     }
 
     async function deleteSharedEntry(entryId) {
@@ -983,7 +976,9 @@
       }
     }
 
-    function getFormEntry(photoData = "") {
+    function getFormEntry() {
+      const photoFile = fields.proofPhoto.files && fields.proofPhoto.files[0];
+
       return {
         id: window.crypto && crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
         date: new Date().toLocaleDateString(),
@@ -994,7 +989,8 @@
         vinLast8: normalize(fields.vinLast8.value),
         entryType: fields.entryType.value,
         proofNotes: clean(fields.proofNotes.value),
-        proofPhoto: photoData,
+        proofAttached: Boolean(photoFile),
+        proofPhotoName: photoFile ? photoFile.name : "",
         reviewStatus: "Pending manager review"
       };
     }
@@ -1136,7 +1132,7 @@
             <td data-label="Tag">${escapeHtml(entry.tagNumber)}</td>
             <td data-label="VIN">${escapeHtml(entry.vinLast8)}</td>
             <td data-label="Notes">${escapeHtml(entry.proofNotes)}</td>
-            <td data-label="Photo">${entry.proofPhoto ? `<a class="photo-link" href="${entry.proofPhoto}" target="_blank" rel="noopener">View</a>` : ""}</td>
+            <td data-label="Photo">${entry.proofAttached || entry.proofPhoto ? "Attached" : ""}</td>
             <td data-label="Action"><button type="button" class="secondary" data-delete="${entry.id}">Delete</button></td>
           </tr>
         `;
@@ -1198,7 +1194,7 @@
         entry.vinLast8,
         entry.proofNotes,
         entry.reviewStatus || "Pending manager review",
-        entry.proofPhoto ? "Yes" : "No"
+        entry.proofAttached || entry.proofPhoto ? "Yes" : "No"
       ]);
 
       return [headers, ...rows].map(row => row.map(value => {
@@ -1287,9 +1283,7 @@
       let entry;
       try {
         setSaveStatus("Saving entry to shared Firebase tracker...", "warn");
-        const photoData = await resizePhoto(fields.proofPhoto.files[0]);
         entry = getFormEntry();
-        entry.proofPhoto = photoData;
         await saveSharedEntry(entry);
       } catch (error) {
         console.error(error);
