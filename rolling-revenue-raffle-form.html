@@ -942,15 +942,6 @@
       await setDoc(doc(entriesCollection, entry.id), entry);
     }
 
-    function withTimeout(promise, milliseconds, message) {
-      return Promise.race([
-        promise,
-        new Promise((_, reject) => {
-          setTimeout(() => reject(new Error(message)), milliseconds);
-        })
-      ]);
-    }
-
     async function deleteSharedEntry(entryId) {
       await deleteDoc(doc(entriesCollection, entryId));
     }
@@ -1271,13 +1262,15 @@
 
       let entry;
       try {
+        setSaveStatus("Saving entry to shared Firebase tracker...", "warn");
         const photoData = await resizePhoto(fields.proofPhoto.files[0]);
         entry = getFormEntry();
         entry.proofPhoto = photoData;
-        await withTimeout(saveSharedEntry(entry), 12000, "Firebase save timed out.");
+        await saveSharedEntry(entry);
       } catch (error) {
         console.error(error);
         alert(`The entry could not be saved to Firebase.\n\n${error.message || "Confirm Firestore is enabled and its rules allow this app, then try again."}`);
+        setSaveStatus(describeFirebaseError(error), "stop");
         return;
       } finally {
         submitButton.disabled = false;
