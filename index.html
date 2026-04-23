@@ -159,6 +159,33 @@
       grid-template-columns: repeat(3, 1fr);
     }
 
+    .quote-group {
+      display: grid;
+      gap: 11px;
+      padding: 12px;
+      border: 1px solid #30343b;
+      border-radius: 8px;
+      background: #111318;
+    }
+
+    .quote-group-title {
+      color: #f4f6f8;
+      font-size: 14px;
+      font-weight: 800;
+    }
+
+    .tire-size-grid {
+      display: grid;
+      grid-template-columns: .85fr 1.15fr 1fr 1fr;
+      gap: 10px;
+    }
+
+    .tire-service-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
     .hidden {
       display: none !important;
     }
@@ -679,6 +706,18 @@
         gap: 15px;
       }
 
+      .quote-group {
+        gap: 12px;
+        padding: 14px;
+        border-radius: 18px;
+        background: #111318;
+      }
+
+      .tire-size-grid,
+      .tire-service-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+
       label {
         gap: 7px;
         font-size: 13px;
@@ -863,7 +902,9 @@
       }
 
       .actions,
-      .toolbar .actions {
+      .toolbar .actions,
+      .tire-size-grid,
+      .tire-service-grid {
         grid-template-columns: 1fr;
       }
 
@@ -967,19 +1008,21 @@
             </select>
           </label>
 
-          <div class="row quote-only">
-            <label>
-              Passenger / LT
-              <select id="tireClass" name="tireClass" required>
-                <option value="">Select</option>
-                <option value="P">P</option>
-                <option value="LT">LT</option>
-              </select>
-            </label>
-            <label>
-              Section Width
-              <select id="sectionWidth" name="sectionWidth" required>
-                <option value="">Select width</option>
+          <div class="quote-group quote-only">
+            <div class="quote-group-title">Tire Size</div>
+            <div class="tire-size-grid">
+              <label>
+                P / LT
+                <select id="tireClass" name="tireClass" required>
+                  <option value="">P/LT</option>
+                  <option value="P">P</option>
+                  <option value="LT">LT</option>
+                </select>
+              </label>
+              <label>
+                Width
+                <select id="sectionWidth" name="sectionWidth" required>
+                  <option value="">Width</option>
                 <option value="145">145</option>
                 <option value="155">155</option>
                 <option value="165">165</option>
@@ -1000,15 +1043,12 @@
                 <option value="315">315</option>
                 <option value="325">325</option>
                 <option value="335">335</option>
-              </select>
-            </label>
-          </div>
-
-          <div class="row three quote-only">
-            <label>
-              Aspect Ratio
-              <select id="aspectRatio" name="aspectRatio" required>
-                <option value="">Select ratio</option>
+                </select>
+              </label>
+              <label>
+                Ratio
+                <select id="aspectRatio" name="aspectRatio" required>
+                  <option value="">Ratio</option>
                 <option value="25">25</option>
                 <option value="30">30</option>
                 <option value="35">35</option>
@@ -1022,12 +1062,12 @@
                 <option value="75">75</option>
                 <option value="80">80</option>
                 <option value="85">85</option>
-              </select>
-            </label>
-            <label>
-              Rim Size
-              <select id="rimSize" name="rimSize" required>
-                <option value="">Select rim</option>
+                </select>
+              </label>
+              <label>
+                Rim
+                <select id="rimSize" name="rimSize" required>
+                  <option value="">Rim</option>
                 <option value="12">12</option>
                 <option value="13">13</option>
                 <option value="14">14</option>
@@ -1041,12 +1081,14 @@
                 <option value="22">22</option>
                 <option value="23">23</option>
                 <option value="24">24</option>
-              </select>
-            </label>
-            <label>
-              Speed Rating
-              <select id="speedRating" name="speedRating" required>
-                <option value="">Select speed</option>
+                </select>
+              </label>
+            </div>
+            <div class="tire-service-grid">
+              <label>
+                Speed Rating
+                <select id="speedRating" name="speedRating" required>
+                  <option value="">Speed</option>
                 <option value="L">L</option>
                 <option value="M">M</option>
                 <option value="N">N</option>
@@ -1061,15 +1103,12 @@
                 <option value="Z">Z</option>
                 <option value="W">W</option>
                 <option value="Y">Y</option>
-              </select>
-            </label>
-          </div>
-
-          <div class="row quote-only">
-            <label>
-              Load Rating
-              <select id="loadRating" name="loadRating" required>
-                <option value="">Select load</option>
+                </select>
+              </label>
+              <label>
+                Load Index
+                <select id="loadRating" name="loadRating" required>
+                  <option value="">Load</option>
                 <option value="70">70</option>
                 <option value="71">71</option>
                 <option value="72">72</option>
@@ -1127,8 +1166,12 @@
                 <option value="124">124</option>
                 <option value="125">125</option>
                 <option value="126">126</option>
-              </select>
-            </label>
+                </select>
+              </label>
+            </div>
+          </div>
+
+          <div class="row quote-only">
             <label>
               Quote Printed / Advisor
               <select id="quoteProvided" name="quoteProvided" required>
