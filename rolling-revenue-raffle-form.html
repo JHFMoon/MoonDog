@@ -247,6 +247,12 @@
       background: #252a32;
     }
 
+    .desktop-only {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
     .danger {
       color: var(--red);
       background: var(--red-soft);
@@ -805,6 +811,10 @@
         background: #252a32;
       }
 
+      .desktop-only {
+        display: none !important;
+      }
+
       .danger {
         color: #ffd5d1;
         background: #3a1d1b;
@@ -1306,11 +1316,15 @@
     const copyLinkButton = document.getElementById("copyLink");
     const photoLabelText = document.getElementById("photoLabelText");
     const quoteOnlyControls = Array.from(document.querySelectorAll(".quote-only"));
+    const submitButton = form.querySelector("button[type='submit']");
+    const clearFormButton = document.getElementById("clearForm");
 
     let entries = [];
     let dbPromise = null;
     let trackerReady = false;
     let unsubscribeSharedEntries = null;
+    let editingEntryId = null;
+    let editingOriginalEntry = null;
     const memoryStore = {};
 
     function clean(value) {
@@ -1326,6 +1340,10 @@
       const href = location.href || "";
       return /Teams|TeamsMobile|SharePoint|Office|Outlook|OneDrive/i.test(ua)
         || /teams\.microsoft|sharepoint\.com|onedrive\.live|Doc\.aspx|AllItems\.aspx/i.test(href);
+    }
+
+    function isDesktopView() {
+      return window.matchMedia("(min-width: 641px)").matches;
     }
 
     function showBrowserWarningIfNeeded() {
@@ -1584,13 +1602,17 @@
     }
 
     function setSubmitBusy(isBusy) {
-      const submitButton = form.querySelector("button[type='submit']");
       submitButton.disabled = isBusy;
-      submitButton.textContent = isBusy ? "Submitting..." : "Submit";
+      submitButton.textContent = isBusy
+        ? (editingEntryId ? "Updating..." : "Submitting...")
+        : (editingEntryId ? "Update Entry" : "Submit");
+      clearFormButton.textContent = editingEntryId ? "Cancel Edit" : "Clear";
     }
 
     function resetOpportunityForm(focusPorter = false) {
       form.reset();
+      editingEntryId = null;
+      editingOriginalEntry = null;
       fields.porterName.value = "";
       fields.tagNumber.value = "";
       fields.vinLast8.value = "";
@@ -1614,6 +1636,51 @@
       if (focusPorter) {
         fields.porterName.focus();
       }
+    }
+
+    function populateFormFromEntry(entry) {
+      fields.porterName.value = entry.porterName || "";
+      fields.entryType.value = entry.entryType === "Sale" ? "Sale" : "Quote";
+      updateEntryTypeRequirements();
+      fields.tagNumber.value = entry.tagNumber || "";
+      fields.vinLast8.value = entry.vinLast8 || "";
+      fields.roNumber.value = entry.roNumber || "";
+
+      if (fields.entryType.value === "Quote") {
+        fields.tireMeasurement.value = entry.tireMeasurement || "";
+        fields.tireClass.value = entry.tireClass || "";
+        fields.sectionWidth.value = entry.sectionWidth || "";
+        fields.aspectRatio.value = entry.aspectRatio || "";
+        fields.rimSize.value = entry.rimSize || "";
+        fields.speedRating.value = entry.speedRating || "";
+        fields.loadRating.value = entry.loadRating || "";
+        fields.quoteProvided.value = entry.quoteProvided || "";
+      }
+
+      fields.proofPhoto.value = "";
+      showPhotoPreview(null);
+      updateDuplicateStatus();
+      setSubmitBusy(false);
+    }
+
+    function beginEditEntry(entryId) {
+      if (!isDesktopView()) {
+        alert("Entry editing is only available on the desktop layout.");
+        return;
+      }
+
+      const entry = entries.find(item => item.id === entryId);
+      if (!entry) {
+        alert("Could not find that entry. Refresh the page and try again.");
+        return;
+      }
+
+      editingEntryId = entry.id;
+      editingOriginalEntry = { ...entry };
+      populateFormFromEntry(entry);
+      setSaveStatus("Editing entry. Make changes, then choose Update Entry. Existing photo stays unless you choose a new one.", "warn");
+      formPanel.scrollIntoView({ behavior: "smooth", block: "start" });
+      fields.porterName.focus();
     }
 
     function resizePhoto(file) {
@@ -1799,7 +1866,7 @@
 
     function updateDuplicateStatus() {
       const candidate = getFormEntry();
-      const matches = findDuplicates(candidate);
+      const matches = findDuplicates(candidate).filter(match => match.entry.id !== editingEntryId);
       dupeStatus.className = "status";
 
       if (!candidate.roNumber && !candidate.vinLast8 && !candidate.tagNumber) {
@@ -1925,7 +1992,10 @@
             <td data-label="Tire Size">${escapeHtml(formatTireSize(entry))}</td>
             <td data-label="Quote Printed">${escapeHtml(entry.quoteProvided || "")}</td>
             <td data-label="Photo">${entry.proofPhoto ? `<a class="photo-link" href="${entry.proofPhoto}" target="_blank" rel="noopener">View</a>` : entry.proofAttached ? "Attached" : ""}</td>
-            <td data-label="Action"><button type="button" class="secondary" data-delete="${entry.id}">Delete</button></td>
+            <td data-label="Action">
+              <button type="button" class="secondary desktop-only" data-edit="${escapeHtml(entry.id)}">Edit</button>
+              <button type="button" class="secondary" data-delete="${escapeHtml(entry.id)}">Delete</button>
+            </td>
           </tr>
         `;
       }).join("");
@@ -2028,7 +2098,9 @@
       }
 
       const candidate = getFormEntry();
-      const duplicateCount = findDuplicates(candidate).length;
+      const isEditing = Boolean(editingEntryId);
+      const originalEntry = editingOriginalEntry;
+      const duplicateCount = findDuplicates(candidate).filter(match => match.entry.id !== editingEntryId).length;
 
       if (duplicateCount > 0) {
         alert("This entry matches or nearly matches an existing entry. It was not submitted. Manager review is required.");
@@ -2043,7 +2115,9 @@
 
       const proofFile = fields.proofPhoto.files && fields.proofPhoto.files[0];
 
-      if (candidate.entryType === "Sale" && !proofFile) {
+      const hasExistingPhoto = Boolean(isEditing && originalEntry && (originalEntry.proofPhoto || originalEntry.proofAttached));
+
+      if (candidate.entryType === "Sale" && !proofFile && !hasExistingPhoto) {
         alert("An RO photo is required for sale involvement entries.");
         fields.proofPhoto.focus();
         return;
@@ -2083,8 +2157,16 @@
 
       let entry;
       try {
-        setSaveStatus("Saving entry to shared Firebase tracker...", "warn");
+        setSaveStatus(isEditing ? "Updating entry in shared Firebase tracker..." : "Saving entry to shared Firebase tracker...", "warn");
         entry = getFormEntry();
+        if (isEditing && originalEntry) {
+          entry.id = editingEntryId;
+          entry.date = originalEntry.date || entry.date;
+          entry.timestamp = originalEntry.timestamp || entry.timestamp;
+          entry.proofAttached = originalEntry.proofAttached || false;
+          entry.proofPhotoName = originalEntry.proofPhotoName || "";
+          entry.proofPhoto = originalEntry.proofPhoto || "";
+        }
         await saveSharedEntry(entry);
       } catch (error) {
         console.error(error);
@@ -2096,7 +2178,7 @@
       }
 
       resetOpportunityForm();
-      setSaveStatus("Entry saved to shared Firebase raffle tracker.");
+      setSaveStatus(isEditing ? "Entry updated in shared Firebase raffle tracker." : "Entry saved to shared Firebase raffle tracker.");
 
       if (proofFile) {
         setSaveStatus("Entry saved. Attaching proof photo...", "warn");
@@ -2109,8 +2191,9 @@
       }
     });
 
-    document.getElementById("clearForm").addEventListener("click", () => {
+    clearFormButton.addEventListener("click", () => {
       resetOpportunityForm(true);
+      setSaveStatus("Connected to shared Firebase raffle tracker.");
     });
 
     document.getElementById("clearAll").addEventListener("click", () => {
@@ -2157,11 +2240,21 @@
     });
 
     entryRows.addEventListener("click", event => {
-      const id = event.target.getAttribute("data-delete");
-      if (!id) return;
+      const button = event.target.closest("button");
+      if (!button) return;
+
+      const editId = button.getAttribute("data-edit");
+      if (editId) {
+        if (!managerUnlocked("edit an entry")) return;
+        beginEditEntry(editId);
+        return;
+      }
+
+      const deleteId = button.getAttribute("data-delete");
+      if (!deleteId) return;
       if (!managerUnlocked("delete an entry")) return;
       if (confirm("Delete this entry?")) {
-        deleteSharedEntry(id).catch(error => {
+        deleteSharedEntry(deleteId).catch(error => {
           console.error(error);
           alert("Could not delete this entry. Check Firebase permissions.");
         });
