@@ -386,6 +386,26 @@
       color: var(--red);
     }
 
+    .photo-preview {
+      display: none;
+      width: 100%;
+      max-height: 150px;
+      object-fit: cover;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #eef2f5;
+    }
+
+    .photo-preview.show {
+      display: block;
+    }
+
+    .photo-link {
+      color: var(--blue);
+      font-weight: 700;
+      text-decoration: none;
+    }
+
     .connection-lock {
       margin: 0 0 14px;
       padding: 12px;
@@ -654,6 +674,12 @@
             <textarea id="proofNotes" name="proofNotes" placeholder="Optional: tire issue or advisor"></textarea>
           </label>
 
+          <label>
+            Proof Photo
+            <input id="proofPhoto" name="proofPhoto" type="file" accept="image/*" capture="environment">
+            <img id="photoPreview" class="photo-preview" alt="Proof photo preview">
+          </label>
+
           <div class="status" id="dupeStatus"></div>
 
           <div class="actions">
@@ -689,6 +715,7 @@
                 <th>Last 8 VIN</th>
                 <th>Tire Measurement</th>
                 <th>Notes</th>
+                <th>Photo</th>
                 <th></th>
               </tr>
             </thead>
@@ -742,7 +769,8 @@
       vinLast8: document.getElementById("vinLast8"),
       entryType: document.getElementById("entryType"),
       tireMeasurement: document.getElementById("tireMeasurement"),
-      proofNotes: document.getElementById("proofNotes")
+      proofNotes: document.getElementById("proofNotes"),
+      proofPhoto: document.getElementById("proofPhoto")
     };
 
     const form = document.getElementById("entryForm");
@@ -755,6 +783,7 @@
     const leaderboard = document.getElementById("leaderboard");
     const searchBox = document.getElementById("searchBox");
     const importFile = document.getElementById("importFile");
+    const photoPreview = document.getElementById("photoPreview");
     const drawResult = document.getElementById("drawResult");
     const saveStatus = document.getElementById("saveStatus");
     const browserWarning = document.getElementById("browserWarning");
@@ -1015,6 +1044,19 @@
       }
     }
 
+    async function attachProofPhoto(entryId, file) {
+      const photoData = await resizePhoto(file);
+      await withTimeout(
+        setDoc(doc(entriesCollection, entryId), {
+          proofAttached: true,
+          proofPhotoName: file.name,
+          proofPhoto: photoData
+        }, { merge: true }),
+        15000,
+        "Entry saved, but the photo attachment did not finish."
+      );
+    }
+
     function withTimeout(promise, milliseconds, message) {
       return Promise.race([
         promise,
@@ -1028,6 +1070,42 @@
       const submitButton = form.querySelector("button[type='submit']");
       submitButton.disabled = isBusy;
       submitButton.textContent = isBusy ? "Submitting..." : "Submit";
+    }
+
+    function resizePhoto(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onerror = () => reject(new Error("Could not read photo."));
+        reader.onload = () => {
+          const image = new Image();
+          image.onerror = () => reject(new Error("Could not load photo."));
+          image.onload = () => {
+            const maxSide = 260;
+            const scale = Math.min(1, maxSide / Math.max(image.width, image.height));
+            const canvas = document.createElement("canvas");
+            canvas.width = Math.max(1, Math.round(image.width * scale));
+            canvas.height = Math.max(1, Math.round(image.height * scale));
+            const context = canvas.getContext("2d");
+            context.drawImage(image, 0, 0, canvas.width, canvas.height);
+            resolve(canvas.toDataURL("image/jpeg", .36));
+          };
+          image.src = reader.result;
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    function showPhotoPreview(file) {
+      if (!file) {
+        photoPreview.removeAttribute("src");
+        photoPreview.classList.remove("show");
+        return;
+      }
+
+      const url = URL.createObjectURL(file);
+      photoPreview.src = url;
+      photoPreview.classList.add("show");
+      photoPreview.onload = () => URL.revokeObjectURL(url);
     }
 
     async function deleteSharedEntry(entryId) {
@@ -1081,6 +1159,9 @@
         entryType,
         tireMeasurement: clean(fields.tireMeasurement.value),
         proofNotes: clean(fields.proofNotes.value),
+        proofAttached: false,
+        proofPhotoName: "",
+        proofPhoto: "",
         reviewStatus: "Pending manager review"
       };
     }
@@ -1223,6 +1304,7 @@
             <td data-label="VIN">${escapeHtml(entry.vinLast8)}</td>
             <td data-label="Measurement">${escapeHtml(entry.tireMeasurement || "")}</td>
             <td data-label="Notes">${escapeHtml(entry.proofNotes)}</td>
+            <td data-label="Photo">${entry.proofPhoto ? `<a class="photo-link" href="${entry.proofPhoto}" target="_blank" rel="noopener">View</a>` : entry.proofAttached ? "Attached" : ""}</td>
             <td data-label="Action"><button type="button" class="secondary" data-delete="${entry.id}">Delete</button></td>
           </tr>
         `;
@@ -1273,7 +1355,7 @@
     }
 
     function toCsv() {
-      const headers = ["Date", "Porter Name", "Entry Type", "Tickets", "RO Number", "Tag Number", "Last 8 VIN", "Tire Measurement", "Proof / Notes", "Review Status"];
+      const headers = ["Date", "Porter Name", "Entry Type", "Tickets", "RO Number", "Tag Number", "Last 8 VIN", "Tire Measurement", "Proof / Notes", "Review Status", "Photo Attached"];
       const rows = entries.map(entry => [
         entry.date,
         entry.porterName,
@@ -1284,7 +1366,8 @@
         entry.vinLast8,
         entry.tireMeasurement || "",
         entry.proofNotes,
-        entry.reviewStatus || "Pending manager review"
+        entry.reviewStatus || "Pending manager review",
+        entry.proofAttached || entry.proofPhoto ? "Yes" : "No"
       ]);
 
       return [headers, ...rows].map(row => row.map(value => {
@@ -1340,6 +1423,7 @@
       setSubmitBusy(true);
 
       let entry;
+      const proofFile = fields.proofPhoto.files && fields.proofPhoto.files[0];
       try {
         setSaveStatus("Saving entry to shared Firebase tracker...", "warn");
         entry = getFormEntry();
@@ -1353,12 +1437,22 @@
         setSubmitBusy(false);
       }
 
-      safeLocalSet(porterNameKey, entry.porterName);
       form.reset();
-      fields.porterName.value = safeLocalGet(porterNameKey) || "";
+      fields.porterName.value = "";
       updateRoAvailability();
       dupeStatus.className = "status";
+      showPhotoPreview(null);
       setSaveStatus("Entry saved to shared Firebase raffle tracker.");
+
+      if (proofFile) {
+        setSaveStatus("Entry saved. Attaching proof photo...", "warn");
+        attachProofPhoto(entry.id, proofFile)
+          .then(() => setSaveStatus("Entry and proof photo saved to shared Firebase raffle tracker."))
+          .catch(error => {
+            console.error(error);
+            setSaveStatus("Entry saved, but the proof photo could not be attached. Try a smaller photo next time.", "warn");
+          });
+      }
     });
 
     document.getElementById("clearForm").addEventListener("click", () => {
@@ -1366,6 +1460,7 @@
       setSubmitBusy(false);
       updateRoAvailability();
       dupeStatus.className = "status";
+      showPhotoPreview(null);
       fields.porterName.focus();
     });
 
@@ -1434,6 +1529,10 @@
       updateDuplicateStatus();
     });
 
+    fields.proofPhoto.addEventListener("change", () => {
+      showPhotoPreview(fields.proofPhoto.files[0]);
+    });
+
     openBrowserButton.addEventListener("click", openCurrentLinkExternally);
     copyLinkButton.addEventListener("click", copyCurrentLink);
 
@@ -1441,7 +1540,7 @@
 
     async function initApp() {
       showBrowserWarningIfNeeded();
-      fields.porterName.value = safeLocalGet(porterNameKey) || "";
+      fields.porterName.value = "";
       setFormEnabled(false);
       setSaveStatus("Connecting to shared Firebase raffle tracker...", "warn");
 
