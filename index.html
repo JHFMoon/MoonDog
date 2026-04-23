@@ -1071,6 +1071,27 @@
       submitButton.textContent = isBusy ? "Submitting..." : "Submit";
     }
 
+    function resetOpportunityForm(focusPorter = false) {
+      form.reset();
+      fields.porterName.value = "";
+      fields.tagNumber.value = "";
+      fields.vinLast8.value = "";
+      fields.roNumber.value = "";
+      fields.entryType.value = "Quote";
+      fields.tireMeasurement.value = "";
+      fields.proofNotes.value = "";
+      fields.proofPhoto.value = "";
+      setSubmitBusy(false);
+      updateRoAvailability();
+      dupeStatus.className = "status";
+      dupeStatus.textContent = "";
+      showPhotoPreview(null);
+
+      if (focusPorter) {
+        fields.porterName.focus();
+      }
+    }
+
     function resizePhoto(file) {
       return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -1436,11 +1457,7 @@
         setSubmitBusy(false);
       }
 
-      form.reset();
-      fields.porterName.value = "";
-      updateRoAvailability();
-      dupeStatus.className = "status";
-      showPhotoPreview(null);
+      resetOpportunityForm();
       setSaveStatus("Entry saved to shared Firebase raffle tracker.");
 
       if (proofFile) {
@@ -1455,12 +1472,7 @@
     });
 
     document.getElementById("clearForm").addEventListener("click", () => {
-      form.reset();
-      setSubmitBusy(false);
-      updateRoAvailability();
-      dupeStatus.className = "status";
-      showPhotoPreview(null);
-      fields.porterName.focus();
+      resetOpportunityForm(true);
     });
 
     document.getElementById("clearAll").addEventListener("click", () => {
