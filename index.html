@@ -619,7 +619,7 @@
 
           <label>
             Proof / Notes
-            <textarea id="proofNotes" name="proofNotes" placeholder="Optional: tire issue, advisor, or sale proof"></textarea>
+            <textarea id="proofNotes" name="proofNotes" placeholder="Optional: tire issue or advisor"></textarea>
           </label>
 
           <label>
@@ -683,6 +683,7 @@
       setDoc,
       deleteDoc,
       getDocs,
+      getDocFromServer,
       onSnapshot,
       query,
       orderBy
@@ -939,7 +940,13 @@
     }
 
     async function saveSharedEntry(entry) {
-      await setDoc(doc(entriesCollection, entry.id), entry);
+      const entryRef = doc(entriesCollection, entry.id);
+      await setDoc(entryRef, entry);
+      const confirmed = await getDocFromServer(entryRef);
+
+      if (!confirmed.exists()) {
+        throw new Error("Firebase did not confirm the saved entry. Try again.");
+      }
     }
 
     async function deleteSharedEntry(entryId) {
@@ -1300,6 +1307,7 @@
       updateRoAvailability();
       dupeStatus.className = "status";
       showPhotoPreview(null);
+      setSaveStatus("Entry saved to shared Firebase raffle tracker.");
     });
 
     document.getElementById("clearForm").addEventListener("click", () => {
