@@ -680,6 +680,7 @@
       setDoc,
       deleteDoc,
       getDocs,
+      getDocFromServer,
       onSnapshot,
       query,
       orderBy
@@ -919,8 +920,15 @@
     function listenForSharedEntries() {
       const entriesQuery = query(entriesCollection, orderBy("timestamp", "desc"));
 
-      return onSnapshot(entriesQuery, snapshot => {
-        entries = snapshot.docs.map(entryDoc => ({
+      return onSnapshot(entriesQuery, { includeMetadataChanges: true }, snapshot => {
+        if (snapshot.metadata.fromCache) {
+          setSaveStatus("Connecting to shared Firebase raffle tracker...", "warn");
+          return;
+        }
+
+        entries = snapshot.docs
+          .filter(entryDoc => !entryDoc.metadata.hasPendingWrites)
+          .map(entryDoc => ({
           id: entryDoc.id,
           ...entryDoc.data()
         }));
@@ -934,7 +942,28 @@
     }
 
     async function saveSharedEntry(entry) {
-      await setDoc(doc(entriesCollection, entry.id), entry);
+      const entryRef = doc(entriesCollection, entry.id);
+      await withTimeout(setDoc(entryRef, entry), 15000, "Firebase save did not finish. Check Firestore rules or connection, then try again.");
+      const confirmed = await withTimeout(getDocFromServer(entryRef), 15000, "Firebase saved locally but did not confirm on the server. Try again.");
+
+      if (!confirmed.exists()) {
+        throw new Error("Firebase did not confirm the saved entry. Try again.");
+      }
+    }
+
+    function withTimeout(promise, milliseconds, message) {
+      return Promise.race([
+        promise,
+        new Promise((_, reject) => {
+          setTimeout(() => reject(new Error(message)), milliseconds);
+        })
+      ]);
+    }
+
+    function setSubmitBusy(isBusy) {
+      const submitButton = form.querySelector("button[type='submit']");
+      submitButton.disabled = isBusy;
+      submitButton.textContent = isBusy ? "Submitting..." : "Submit";
     }
 
     async function deleteSharedEntry(entryId) {
@@ -972,15 +1001,20 @@
     }
 
     function getFormEntry() {
+      const roNumber = normalize(fields.roNumber.value);
+      const tagNumber = normalize(fields.tagNumber.value);
+      const vinLast8 = normalize(fields.vinLast8.value);
+      const entryType = fields.entryType.value;
+
       return {
-        id: window.crypto && crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
+        id: [entryType, tagNumber || "NO-TAG", vinLast8 || "NO-VIN", roNumber || "NO-RO"].join("-"),
         date: new Date().toLocaleDateString(),
         timestamp: new Date().toISOString(),
         porterName: clean(fields.porterName.value),
-        roNumber: normalize(fields.roNumber.value),
-        tagNumber: normalize(fields.tagNumber.value),
-        vinLast8: normalize(fields.vinLast8.value),
-        entryType: fields.entryType.value,
+        roNumber,
+        tagNumber,
+        vinLast8,
+        entryType,
         tireMeasurement: clean(fields.tireMeasurement.value),
         proofNotes: clean(fields.proofNotes.value),
         reviewStatus: "Pending manager review"
@@ -1233,9 +1267,7 @@
         return;
       }
 
-      const submitButton = form.querySelector("button[type='submit']");
-      submitButton.disabled = true;
-      submitButton.textContent = "Submitting...";
+      setSubmitBusy(true);
 
       let entry;
       try {
@@ -1248,8 +1280,7 @@
         setSaveStatus(describeFirebaseError(error), "stop");
         return;
       } finally {
-        submitButton.disabled = false;
-        submitButton.textContent = "Submit";
+        setSubmitBusy(false);
       }
 
       safeLocalSet(porterNameKey, entry.porterName);
@@ -1262,6 +1293,7 @@
 
     document.getElementById("clearForm").addEventListener("click", () => {
       form.reset();
+      setSubmitBusy(false);
       updateRoAvailability();
       dupeStatus.className = "status";
       fields.porterName.focus();
