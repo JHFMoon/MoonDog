@@ -1,0 +1,1386 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Rolling Revenue Raffle Tracker</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #172026;
+      --muted: #5f6f7a;
+      --line: #d6dde2;
+      --paper: #f7f9fb;
+      --panel: #ffffff;
+      --green: #177245;
+      --green-soft: #e7f4ed;
+      --gold: #b7791f;
+      --gold-soft: #fff4d9;
+      --red: #b42318;
+      --red-soft: #ffe8e5;
+      --blue: #2563eb;
+      --blue-soft: #e9f0ff;
+      --shadow: 0 10px 28px rgba(23, 32, 38, .08);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Segoe UI", Arial, sans-serif;
+      color: var(--ink);
+      background: linear-gradient(180deg, #f3f6f8 0%, #edf2f5 100%);
+    }
+
+    header {
+      background: #172026;
+      color: #fff;
+      padding: 18px clamp(14px, 4vw, 48px);
+      border-bottom: 5px solid #d5a028;
+    }
+
+    .topline {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      max-width: 1180px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(24px, 4vw, 38px);
+      line-height: 1.05;
+      letter-spacing: 0;
+    }
+
+    .subtitle {
+      margin: 8px 0 0;
+      color: #d8e1e6;
+      font-size: 15px;
+    }
+
+    .ticket-total {
+      min-width: 162px;
+      padding: 12px 16px;
+      border: 1px solid rgba(255, 255, 255, .18);
+      border-radius: 8px;
+      text-align: center;
+      background: rgba(255, 255, 255, .08);
+    }
+
+    .ticket-total strong {
+      display: block;
+      font-size: 30px;
+      line-height: 1;
+    }
+
+    main {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 16px clamp(12px, 4vw, 48px) 48px;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(310px, 410px) minmax(0, 1fr);
+      gap: 18px;
+      align-items: start;
+    }
+
+    section {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+    }
+
+    .form-panel {
+      padding: 18px;
+      position: sticky;
+      top: 14px;
+    }
+
+    h2 {
+      margin: 0 0 14px;
+      font-size: 19px;
+      letter-spacing: 0;
+    }
+
+    form {
+      display: grid;
+      gap: 12px;
+    }
+
+    label {
+      display: grid;
+      gap: 6px;
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 650;
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      border: 1px solid #bfc9d0;
+      border-radius: 6px;
+      padding: 13px 12px;
+      color: var(--ink);
+      background: #fff;
+      font: 16px "Segoe UI", Arial, sans-serif;
+      min-height: 50px;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 58px;
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+      outline: 3px solid rgba(37, 99, 235, .16);
+      border-color: var(--blue);
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .status {
+      display: none;
+      padding: 10px 12px;
+      border-radius: 6px;
+      font-size: 14px;
+      line-height: 1.35;
+    }
+
+    .status.show {
+      display: block;
+    }
+
+    .status.ok {
+      color: #14532d;
+      background: var(--green-soft);
+      border: 1px solid #a7d8bd;
+    }
+
+    .status.warn {
+      color: #7c2d12;
+      background: var(--gold-soft);
+      border: 1px solid #e6c36d;
+    }
+
+    .status.stop {
+      color: var(--red);
+      background: var(--red-soft);
+      border: 1px solid #ffb4ad;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 9px;
+      margin-top: 2px;
+    }
+
+    button {
+      border: 0;
+      border-radius: 6px;
+      padding: 13px 15px;
+      font: 700 15px "Segoe UI", Arial, sans-serif;
+      font-weight: 700;
+      cursor: pointer;
+      min-height: 50px;
+    }
+
+    .primary {
+      color: #fff;
+      background: var(--green);
+    }
+
+    .secondary {
+      color: var(--ink);
+      background: #e8edf1;
+    }
+
+    .danger {
+      color: var(--red);
+      background: var(--red-soft);
+    }
+
+    .toolbar {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      padding: 14px;
+      border-bottom: 1px solid var(--line);
+      background: #fbfcfd;
+      border-radius: 8px 8px 0 0;
+    }
+
+    .toolbar input {
+      max-width: 330px;
+      min-width: min(100%, 240px);
+    }
+
+    .toolbar h2 {
+      width: 100%;
+      margin-bottom: 0;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 860px;
+    }
+
+    th,
+    td {
+      padding: 11px 12px;
+      text-align: left;
+      border-bottom: 1px solid #e3e8ec;
+      vertical-align: top;
+      font-size: 14px;
+    }
+
+    th {
+      color: #465862;
+      background: #f4f7f9;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 58px;
+      border-radius: 999px;
+      padding: 4px 8px;
+      font-weight: 750;
+      font-size: 12px;
+    }
+
+    .quote {
+      color: #1d4ed8;
+      background: var(--blue-soft);
+    }
+
+    .sale {
+      color: #14532d;
+      background: var(--green-soft);
+    }
+
+    .weak {
+      color: var(--red);
+      background: var(--red-soft);
+    }
+
+    .leaderboard {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+
+    .leader {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 12px;
+      box-shadow: var(--shadow);
+    }
+
+    .leader span {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      margin-bottom: 5px;
+    }
+
+    .leader strong {
+      display: block;
+      font-size: 22px;
+    }
+
+    .leader small {
+      color: var(--muted);
+    }
+
+    .empty {
+      padding: 24px;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .note {
+      margin: 12px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .file-input {
+      display: none;
+    }
+
+    .photo-preview {
+      display: none;
+      width: 100%;
+      max-height: 170px;
+      object-fit: cover;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #eef2f5;
+    }
+
+    .photo-preview.show {
+      display: block;
+    }
+
+    .photo-link {
+      color: var(--blue);
+      font-weight: 700;
+      text-decoration: none;
+    }
+
+    .draw-result {
+      display: none;
+      margin: 0 0 14px;
+      padding: 14px;
+      border: 1px solid #e6c36d;
+      border-radius: 8px;
+      background: var(--gold-soft);
+      color: #513316;
+      font-size: 16px;
+      line-height: 1.35;
+    }
+
+    .draw-result.show {
+      display: block;
+    }
+
+    .draw-result strong {
+      display: block;
+      font-size: 24px;
+      color: var(--ink);
+    }
+
+    .save-status {
+      margin: 12px 0 0;
+      padding: 10px 12px;
+      border-radius: 6px;
+      border: 1px solid #a7d8bd;
+      background: var(--green-soft);
+      color: #14532d;
+      font-size: 13px;
+      line-height: 1.35;
+    }
+
+    .save-status.warn {
+      border-color: #e6c36d;
+      background: var(--gold-soft);
+      color: #7c2d12;
+    }
+
+    .save-status.stop {
+      border-color: #ffb4ad;
+      background: var(--red-soft);
+      color: var(--red);
+    }
+
+    .browser-warning {
+      display: none;
+      margin: 0 0 14px;
+      padding: 14px;
+      border: 1px solid #e6c36d;
+      border-radius: 8px;
+      background: var(--gold-soft);
+      color: #513316;
+      line-height: 1.4;
+    }
+
+    .browser-warning.show {
+      display: block;
+    }
+
+    .browser-warning strong {
+      display: block;
+      color: var(--ink);
+      font-size: 17px;
+      margin-bottom: 6px;
+    }
+
+    .browser-warning .actions {
+      margin-top: 10px;
+    }
+
+    @media (max-width: 880px) {
+      .layout,
+      .leaderboard,
+      .row {
+        grid-template-columns: 1fr;
+      }
+
+      .topline {
+        align-items: stretch;
+        flex-direction: column;
+      }
+
+      .ticket-total {
+        text-align: left;
+      }
+
+      .form-panel {
+        position: static;
+      }
+    }
+
+    @media (max-width: 640px) {
+      body {
+        background: #f3f6f8;
+      }
+
+      header {
+        padding: 14px 12px;
+      }
+
+      h1 {
+        font-size: 25px;
+      }
+
+      .subtitle {
+        font-size: 13px;
+      }
+
+      main {
+        padding: 10px 10px 28px;
+      }
+
+      section,
+      .leader {
+        box-shadow: none;
+      }
+
+      .form-panel {
+        padding: 14px;
+      }
+
+      .actions {
+        display: grid;
+        grid-template-columns: 1fr;
+        width: 100%;
+      }
+
+      .actions button {
+        width: 100%;
+      }
+
+      .toolbar {
+        display: grid;
+        grid-template-columns: 1fr;
+        padding: 12px;
+      }
+
+      .toolbar input {
+        max-width: none;
+        min-width: 0;
+      }
+
+      .table-wrap {
+        overflow: visible;
+      }
+
+      table,
+      thead,
+      tbody,
+      tr,
+      td {
+        display: block;
+        width: 100%;
+        min-width: 0;
+      }
+
+      table {
+        border-collapse: separate;
+        border-spacing: 0 10px;
+      }
+
+      thead {
+        display: none;
+      }
+
+      tr {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #fff;
+        overflow: hidden;
+      }
+
+      td {
+        display: grid;
+        grid-template-columns: 104px minmax(0, 1fr);
+        gap: 10px;
+        padding: 10px 12px;
+        border-bottom: 1px solid #edf1f4;
+        word-break: break-word;
+      }
+
+      td::before {
+        content: attr(data-label);
+        color: var(--muted);
+        font-weight: 750;
+        font-size: 12px;
+        text-transform: uppercase;
+      }
+
+      td:last-child {
+        border-bottom: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="topline">
+      <div>
+        <h1>Rolling Revenue Raffle</h1>
+        <p class="subtitle">Porter tire quote and sale tracker</p>
+      </div>
+      <div class="ticket-total" aria-live="polite">
+        <strong id="totalTickets">0</strong>
+        Total Tickets
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div id="browserWarning" class="browser-warning" aria-live="polite">
+      <strong>Open this in Safari or Chrome before using it.</strong>
+      Teams/SharePoint preview can block saved entries on phones.
+      <div class="actions">
+        <button type="button" class="primary" id="openBrowser">Open in Browser</button>
+        <button type="button" class="secondary" id="copyLink">Copy Link</button>
+      </div>
+    </div>
+
+    <div class="leaderboard" id="leaderboard"></div>
+
+    <div class="layout">
+      <section class="form-panel" aria-labelledby="formTitle">
+        <h2 id="formTitle">Add Opportunity</h2>
+        <form id="entryForm">
+          <label>
+            Porter Name
+            <input id="porterName" name="porterName" autocomplete="name" placeholder="Your name" required>
+          </label>
+
+          <div class="row">
+            <label>
+              Tag Number
+              <input id="tagNumber" name="tagNumber" inputmode="text" autocomplete="off" placeholder="Ex: 1234" required>
+            </label>
+            <label>
+              Last 8 VIN
+              <input id="vinLast8" name="vinLast8" maxlength="8" minlength="8" autocomplete="off" spellcheck="false" placeholder="Last 8 only" required>
+            </label>
+          </div>
+
+          <div class="row">
+            <label>
+              RO Number
+              <input id="roNumber" name="roNumber" inputmode="numeric" autocomplete="off" placeholder="Optional">
+            </label>
+            <label>
+              Entry Type
+              <select id="entryType" name="entryType" required>
+                <option value="Quote">New quote - 1 ticket</option>
+                <option value="Sale">Sale involvement - 2 tickets</option>
+              </select>
+            </label>
+          </div>
+
+          <label>
+            Proof / Notes
+            <textarea id="proofNotes" name="proofNotes" placeholder="Optional: tire issue, advisor, or sale proof"></textarea>
+          </label>
+
+          <label>
+            Proof Photo
+            <input id="proofPhoto" name="proofPhoto" type="file" accept="image/*" capture="environment" required>
+            <img id="photoPreview" class="photo-preview" alt="Proof photo preview">
+          </label>
+
+          <div class="status" id="dupeStatus"></div>
+
+          <div class="actions">
+            <button type="submit" class="primary">Submit</button>
+            <button type="button" class="secondary" id="clearForm">Clear</button>
+          </div>
+        </form>
+        <p class="note">Parking-lot workflow: tag number is fastest, last 8 VIN is the stronger backup, and RO can be added later by an advisor or manager. Matching or near-matching records are blocked from submission.</p>
+        <div id="saveStatus" class="save-status" aria-live="polite">Checking phone storage...</div>
+      </section>
+
+      <section aria-labelledby="logTitle">
+        <div class="toolbar">
+          <h2 id="logTitle">Contest Log</h2>
+          <input id="searchBox" placeholder="Search porter, tag, VIN, RO, advisor">
+          <div class="actions">
+            <button type="button" class="primary" id="drawWinner">Draw Winner</button>
+            <button type="button" class="danger" id="clearAll">Clear All</button>
+          </div>
+          <input class="file-input" type="file" id="importFile" accept="application/json">
+        </div>
+        <div id="drawResult" class="draw-result" aria-live="polite"></div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Porter</th>
+                <th>Type</th>
+                <th>Tickets</th>
+                <th>RO</th>
+                <th>Tag</th>
+                <th>Last 8 VIN</th>
+                <th>Proof / Notes</th>
+                <th>Photo</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="entryRows"></tbody>
+          </table>
+          <div class="empty" id="emptyState">No entries yet.</div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
+    import {
+      getFirestore,
+      collection,
+      doc,
+      setDoc,
+      deleteDoc,
+      getDocs,
+      onSnapshot,
+      query,
+      orderBy
+    } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+    import {
+      getStorage,
+      ref as storageRef,
+      uploadString,
+      getDownloadURL
+    } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-storage.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCcHe75SWk3c1_qLzdoO6LmuSXM50lDS-8",
+      authDomain: "raffle-tracker-a08e9.firebaseapp.com",
+      projectId: "raffle-tracker-a08e9",
+      storageBucket: "raffle-tracker-a08e9.firebasestorage.app",
+      messagingSenderId: "459176907977",
+      appId: "1:459176907977:web:083e7ac7cddd5bf0ff2918",
+      measurementId: "G-XMKGH56J9P"
+    };
+
+    const firebaseApp = initializeApp(firebaseConfig);
+    const raffleDb = getFirestore(firebaseApp);
+    const raffleStorage = getStorage(firebaseApp);
+    const entriesCollection = collection(raffleDb, "raffleEntries");
+
+    const storageKey = "rollingRevenueRaffleEntries";
+    const porterNameKey = "rollingRevenueRafflePorterName";
+    const dbName = "RollingRevenueRaffleDb";
+    const dbStore = "settings";
+    const managerPassword = "tires2026";
+    const fields = {
+      porterName: document.getElementById("porterName"),
+      roNumber: document.getElementById("roNumber"),
+      tagNumber: document.getElementById("tagNumber"),
+      vinLast8: document.getElementById("vinLast8"),
+      entryType: document.getElementById("entryType"),
+      proofNotes: document.getElementById("proofNotes"),
+      proofPhoto: document.getElementById("proofPhoto")
+    };
+
+    const form = document.getElementById("entryForm");
+    const dupeStatus = document.getElementById("dupeStatus");
+    const entryRows = document.getElementById("entryRows");
+    const emptyState = document.getElementById("emptyState");
+    const totalTickets = document.getElementById("totalTickets");
+    const leaderboard = document.getElementById("leaderboard");
+    const searchBox = document.getElementById("searchBox");
+    const importFile = document.getElementById("importFile");
+    const photoPreview = document.getElementById("photoPreview");
+    const drawResult = document.getElementById("drawResult");
+    const saveStatus = document.getElementById("saveStatus");
+    const browserWarning = document.getElementById("browserWarning");
+    const openBrowserButton = document.getElementById("openBrowser");
+    const copyLinkButton = document.getElementById("copyLink");
+
+    let entries = [];
+    let dbPromise = null;
+    const memoryStore = {};
+
+    function clean(value) {
+      return String(value || "").trim();
+    }
+
+    function normalize(value) {
+      return clean(value).toUpperCase().replace(/[^A-Z0-9]/g, "");
+    }
+
+    function isLikelyTeamsOrSharePointPreview() {
+      const ua = navigator.userAgent || "";
+      const href = location.href || "";
+      return /Teams|TeamsMobile|SharePoint|Office|Outlook|OneDrive/i.test(ua)
+        || /teams\.microsoft|sharepoint\.com|onedrive\.live|Doc\.aspx|AllItems\.aspx/i.test(href);
+    }
+
+    function showBrowserWarningIfNeeded() {
+      if (isLikelyTeamsOrSharePointPreview()) {
+        browserWarning.classList.add("show");
+      }
+    }
+
+    async function copyCurrentLink() {
+      try {
+        await navigator.clipboard.writeText(location.href);
+        alert("Link copied. Paste it into Safari or Chrome.");
+      } catch {
+        prompt("Copy this link and open it in Safari or Chrome:", location.href);
+      }
+    }
+
+    function openCurrentLinkExternally() {
+      const url = location.href;
+
+      if (navigator.share) {
+        navigator.share({
+          title: document.title,
+          text: "Open this raffle form in Safari or Chrome.",
+          url
+        }).catch(() => {
+          window.open(url, "_blank", "noopener,noreferrer");
+        });
+        return;
+      }
+
+      window.open(url, "_blank", "noopener,noreferrer");
+    }
+
+    function setSaveStatus(message, level = "ok") {
+      saveStatus.textContent = message;
+      saveStatus.className = `save-status ${level === "ok" ? "" : level}`;
+    }
+
+    function safeLocalGet(key) {
+      try {
+        return localStorage.getItem(key);
+      } catch {
+        return memoryStore[key] || null;
+      }
+    }
+
+    function safeLocalSet(key, value) {
+      memoryStore[key] = value;
+      try {
+        localStorage.setItem(key, value);
+        return true;
+      } catch {
+        return false;
+      }
+    }
+
+    function openDatabase() {
+      if (!("indexedDB" in window)) return Promise.reject(new Error("IndexedDB unavailable."));
+      if (dbPromise) return dbPromise;
+
+      dbPromise = new Promise((resolve, reject) => {
+        const timeout = setTimeout(() => reject(new Error("Storage timed out.")), 1800);
+        const request = indexedDB.open(dbName, 1);
+        request.onerror = () => {
+          clearTimeout(timeout);
+          reject(request.error || new Error("Could not open storage."));
+        };
+        request.onupgradeneeded = () => {
+          request.result.createObjectStore(dbStore);
+        };
+        request.onsuccess = () => {
+          clearTimeout(timeout);
+          resolve(request.result);
+        };
+      });
+
+      return dbPromise;
+    }
+
+    async function dbGet(key) {
+      const db = await openDatabase();
+      return new Promise((resolve, reject) => {
+        const timeout = setTimeout(() => reject(new Error("Storage read timed out.")), 1800);
+        const request = db.transaction(dbStore, "readonly").objectStore(dbStore).get(key);
+        request.onerror = () => {
+          clearTimeout(timeout);
+          reject(request.error || new Error("Could not read storage."));
+        };
+        request.onsuccess = () => {
+          clearTimeout(timeout);
+          resolve(request.result);
+        };
+      });
+    }
+
+    async function dbSet(key, value) {
+      const db = await openDatabase();
+      return new Promise((resolve, reject) => {
+        const timeout = setTimeout(() => reject(new Error("Storage save timed out.")), 1800);
+        const request = db.transaction(dbStore, "readwrite").objectStore(dbStore).put(value, key);
+        request.onerror = () => {
+          clearTimeout(timeout);
+          reject(request.error || new Error("Could not save storage."));
+        };
+        request.onsuccess = () => {
+          clearTimeout(timeout);
+          resolve(true);
+        };
+      });
+    }
+
+    function loadEntriesLocal() {
+      try {
+        const stored = JSON.parse(safeLocalGet(storageKey) || "[]");
+        return Array.isArray(stored) ? stored : [];
+      } catch {
+        return [];
+      }
+    }
+
+    async function loadEntriesFromDevice() {
+      try {
+        const stored = await dbGet(storageKey);
+        const loaded = Array.isArray(stored) ? stored : [];
+        setSaveStatus("Entries save on this phone using durable browser storage.");
+        return loaded;
+      } catch {
+        const fallback = loadEntriesLocal();
+        const localWorks = safeLocalSet("__raffle_storage_test__", "1");
+        setSaveStatus(
+          localWorks
+            ? "Teams mobile is using fallback storage. Test one entry, close, reopen, and confirm it stays."
+            : "Teams mobile is blocking saved entries. This file must be opened in Safari/Chrome or hosted on SharePoint.",
+          localWorks ? "warn" : "stop"
+        );
+        if (!localWorks) {
+          browserWarning.classList.add("show");
+        }
+        return fallback;
+      }
+    }
+
+    async function saveEntries() {
+      memoryStore[storageKey] = JSON.stringify(entries);
+
+      try {
+        await dbSet(storageKey, entries);
+        safeLocalSet(storageKey, JSON.stringify(entries.map(entry => ({ ...entry, proofPhoto: "" }))));
+        setSaveStatus("Saved on this phone.");
+        return true;
+      } catch {
+        const slimEntries = entries.map(entry => ({ ...entry, proofPhoto: "" }));
+        const savedLocal = safeLocalSet(storageKey, JSON.stringify(slimEntries));
+        setSaveStatus(
+          savedLocal
+            ? "Saved without photos in fallback storage. Open in browser for the most reliable version."
+            : "Not saved by this Teams phone preview. Open this file in Safari/Chrome before using it.",
+          savedLocal ? "warn" : "stop"
+        );
+        if (!savedLocal) {
+          browserWarning.classList.add("show");
+        }
+        return savedLocal;
+      }
+    }
+
+    function describeFirebaseError(error) {
+      const code = error && error.code ? ` (${error.code})` : "";
+      return `Firebase could not save/load entries${code}. Check that Firestore and Storage are enabled and that rules allow this app.`;
+    }
+
+    function listenForSharedEntries() {
+      const entriesQuery = query(entriesCollection, orderBy("timestamp", "desc"));
+
+      return onSnapshot(entriesQuery, snapshot => {
+        entries = snapshot.docs.map(entryDoc => ({
+          id: entryDoc.id,
+          ...entryDoc.data()
+        }));
+        setSaveStatus("Connected to shared Firebase raffle tracker.");
+        renderRows();
+        updateDuplicateStatus();
+      }, error => {
+        console.error(error);
+        setSaveStatus(describeFirebaseError(error), "stop");
+      });
+    }
+
+    async function uploadProofPhoto(photoData, entryId) {
+      const photoRef = storageRef(raffleStorage, `proof-photos/${entryId}.jpg`);
+      await uploadString(photoRef, photoData, "data_url");
+      return getDownloadURL(photoRef);
+    }
+
+    async function saveSharedEntry(entry) {
+      await setDoc(doc(entriesCollection, entry.id), entry);
+    }
+
+    async function deleteSharedEntry(entryId) {
+      await deleteDoc(doc(entriesCollection, entryId));
+    }
+
+    async function clearSharedEntries() {
+      const snapshot = await getDocs(entriesCollection);
+      await Promise.all(snapshot.docs.map(entryDoc => deleteDoc(entryDoc.ref)));
+    }
+
+    function managerUnlocked(actionName) {
+      const attempt = prompt(`Manager password required to ${actionName}:`);
+      if (attempt === null) return false;
+      if (attempt !== managerPassword) {
+        alert("Incorrect password.");
+        return false;
+      }
+      return true;
+    }
+
+    function ticketsFor(type) {
+      return type === "Sale" ? 2 : 1;
+    }
+
+    function getFormEntry(photoData = "") {
+      return {
+        id: window.crypto && crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
+        date: new Date().toLocaleDateString(),
+        timestamp: new Date().toISOString(),
+        porterName: clean(fields.porterName.value),
+        roNumber: normalize(fields.roNumber.value),
+        tagNumber: normalize(fields.tagNumber.value),
+        vinLast8: normalize(fields.vinLast8.value),
+        entryType: fields.entryType.value,
+        proofNotes: clean(fields.proofNotes.value),
+        proofPhoto: photoData,
+        reviewStatus: "Pending manager review"
+      };
+    }
+
+    function levenshtein(a, b) {
+      if (a === b) return 0;
+      if (!a || !b) return Math.max(a.length, b.length);
+
+      const previous = Array.from({ length: b.length + 1 }, (_, index) => index);
+      const current = Array(b.length + 1);
+
+      for (let i = 1; i <= a.length; i += 1) {
+        current[0] = i;
+        for (let j = 1; j <= b.length; j += 1) {
+          const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+          current[j] = Math.min(
+            current[j - 1] + 1,
+            previous[j] + 1,
+            previous[j - 1] + cost
+          );
+        }
+        previous.splice(0, previous.length, ...current);
+      }
+
+      return previous[b.length];
+    }
+
+    function nearMatch(a, b, maxDistance = 1) {
+      if (!a || !b) return false;
+      const shortest = Math.min(a.length, b.length);
+      if (shortest < 4) return a === b;
+      if (Math.abs(a.length - b.length) > maxDistance) return false;
+      return levenshtein(a, b) <= maxDistance;
+    }
+
+    function duplicateReasons(candidate, entry) {
+      const reasons = [];
+      const entryTag = normalize(entry.tagNumber);
+      const entryVin = normalize(entry.vinLast8);
+      const entryRo = normalize(entry.roNumber);
+
+      if (candidate.tagNumber && entryTag === candidate.tagNumber) reasons.push("exact tag");
+      else if (nearMatch(candidate.tagNumber, entryTag)) reasons.push("near tag typo");
+
+      if (candidate.vinLast8 && entryVin === candidate.vinLast8) reasons.push("exact VIN");
+      else if (nearMatch(candidate.vinLast8, entryVin)) reasons.push("near VIN typo");
+
+      if (candidate.roNumber && entryRo === candidate.roNumber) reasons.push("exact RO");
+      else if (nearMatch(candidate.roNumber, entryRo)) reasons.push("near RO typo");
+
+      return reasons;
+    }
+
+    function findDuplicates(candidate) {
+      return entries
+        .map(entry => ({ entry, reasons: duplicateReasons(candidate, entry) }))
+        .filter(match => match.reasons.length > 0);
+    }
+
+    function updateDuplicateStatus() {
+      const candidate = getFormEntry();
+      const matches = findDuplicates(candidate);
+      dupeStatus.className = "status";
+
+      if (!candidate.roNumber && !candidate.vinLast8 && !candidate.tagNumber) {
+        dupeStatus.textContent = "";
+        return;
+      }
+
+      if (matches.length === 0) {
+        dupeStatus.textContent = "No matching tag, VIN, or RO found. This entry can be submitted with required photo proof.";
+        dupeStatus.classList.add("show", "ok");
+        return;
+      }
+
+      const first = matches[0].entry;
+      dupeStatus.textContent = `Blocked duplicate or likely typo match (${matches[0].reasons.join(", ")}): ${first.entryType} already entered for tag ${first.tagNumber || "N/A"}, VIN ${first.vinLast8 || "N/A"}, RO ${first.roNumber || "N/A"} by ${first.porterName}. Manager must review outside this form.`;
+      dupeStatus.classList.add("show", "stop");
+    }
+
+    function renderLeaderboard() {
+      const totals = entries.reduce((map, entry) => {
+        const name = entry.porterName || "Unknown";
+        if (!map[name]) {
+          map[name] = { quotes: 0, sales: 0, tickets: 0 };
+        }
+        if (entry.entryType === "Sale") {
+          map[name].sales += 1;
+        } else {
+          map[name].quotes += 1;
+        }
+        map[name].tickets += ticketsFor(entry.entryType);
+        return map;
+      }, {});
+
+      const leaders = Object.entries(totals)
+        .sort((a, b) => b[1].tickets - a[1].tickets || b[1].sales - a[1].sales)
+        .slice(0, 3);
+
+      if (leaders.length === 0) {
+        leaderboard.innerHTML = `
+          <div class="leader"><span>1st</span><strong>-</strong><small>No entries</small></div>
+          <div class="leader"><span>2nd</span><strong>-</strong><small>No entries</small></div>
+          <div class="leader"><span>3rd</span><strong>-</strong><small>No entries</small></div>
+        `;
+        return;
+      }
+
+      const labels = ["1st", "2nd", "3rd"];
+      leaderboard.innerHTML = labels.map((label, index) => {
+        const leader = leaders[index];
+        if (!leader) {
+          return `<div class="leader"><span>${label}</span><strong>-</strong><small>No entry</small></div>`;
+        }
+        const [name, stats] = leader;
+        return `<div class="leader"><span>${label}</span><strong>${escapeHtml(name)}</strong><small>${stats.tickets} tickets | ${stats.quotes} quotes | ${stats.sales} sales</small></div>`;
+      }).join("");
+    }
+
+    function renderRows() {
+      const query = normalize(searchBox.value);
+      const filtered = entries
+        .slice()
+        .sort((a, b) => String(b.timestamp).localeCompare(String(a.timestamp)))
+        .filter(entry => {
+          if (!query) return true;
+          return normalize(Object.values(entry).join(" ")).includes(query);
+        });
+
+      entryRows.innerHTML = filtered.map(entry => {
+        const typeClass = entry.entryType === "Sale" ? "sale" : "quote";
+        return `
+          <tr>
+            <td data-label="Date">${escapeHtml(entry.date)}</td>
+            <td data-label="Porter">${escapeHtml(entry.porterName)}</td>
+            <td data-label="Type"><span class="pill ${typeClass}">${escapeHtml(entry.entryType)}</span></td>
+            <td data-label="Tickets">${ticketsFor(entry.entryType)}</td>
+            <td data-label="RO">${escapeHtml(entry.roNumber)}</td>
+            <td data-label="Tag">${escapeHtml(entry.tagNumber)}</td>
+            <td data-label="VIN">${escapeHtml(entry.vinLast8)}</td>
+            <td data-label="Notes">${escapeHtml(entry.proofNotes)}</td>
+            <td data-label="Photo">${entry.proofPhoto ? `<a class="photo-link" href="${entry.proofPhoto}" target="_blank" rel="noopener">View</a>` : ""}</td>
+            <td data-label="Action"><button type="button" class="secondary" data-delete="${entry.id}">Delete</button></td>
+          </tr>
+        `;
+      }).join("");
+
+      emptyState.style.display = filtered.length ? "none" : "block";
+      totalTickets.textContent = entries.reduce((sum, entry) => sum + ticketsFor(entry.entryType), 0);
+      renderLeaderboard();
+    }
+
+    function escapeHtml(value) {
+      return String(value || "").replace(/[&<>"']/g, char => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+      })[char]);
+    }
+
+    function download(filename, content, type) {
+      const blob = new Blob([content], { type });
+
+      if (typeof File !== "undefined" && navigator.canShare && navigator.share) {
+        const file = new File([blob], filename, { type });
+        if (!navigator.canShare({ files: [file] })) {
+          return standardDownload(blob, filename);
+        }
+
+        navigator.share({
+          files: [file],
+          title: filename,
+          text: filename
+        }).catch(() => {});
+        return;
+      }
+
+      standardDownload(blob, filename);
+    }
+
+    function standardDownload(blob, filename) {
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      link.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function toCsv() {
+      const headers = ["Date", "Porter Name", "Entry Type", "Tickets", "RO Number", "Tag Number", "Last 8 VIN", "Proof / Notes", "Review Status", "Photo Attached"];
+      const rows = entries.map(entry => [
+        entry.date,
+        entry.porterName,
+        entry.entryType,
+        ticketsFor(entry.entryType),
+        entry.roNumber,
+        entry.tagNumber,
+        entry.vinLast8,
+        entry.proofNotes,
+        entry.reviewStatus || "Pending manager review",
+        entry.proofPhoto ? "Yes" : "No"
+      ]);
+
+      return [headers, ...rows].map(row => row.map(value => {
+        const text = String(value || "");
+        return /[",\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+      }).join(",")).join("\n");
+    }
+
+    function resizePhoto(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onerror = () => reject(new Error("Could not read photo."));
+        reader.onload = () => {
+          const image = new Image();
+          image.onerror = () => reject(new Error("Could not load photo."));
+          image.onload = () => {
+            const maxSide = 760;
+            const scale = Math.min(1, maxSide / Math.max(image.width, image.height));
+            const canvas = document.createElement("canvas");
+            canvas.width = Math.max(1, Math.round(image.width * scale));
+            canvas.height = Math.max(1, Math.round(image.height * scale));
+            const context = canvas.getContext("2d");
+            context.drawImage(image, 0, 0, canvas.width, canvas.height);
+            resolve(canvas.toDataURL("image/jpeg", .62));
+          };
+          image.src = reader.result;
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    function showPhotoPreview(file) {
+      if (!file) {
+        photoPreview.removeAttribute("src");
+        photoPreview.classList.remove("show");
+        return;
+      }
+
+      const url = URL.createObjectURL(file);
+      photoPreview.src = url;
+      photoPreview.classList.add("show");
+      photoPreview.onload = () => URL.revokeObjectURL(url);
+    }
+
+    function drawWeightedWinner() {
+      const ticketPool = [];
+      entries.forEach(entry => {
+        for (let index = 0; index < ticketsFor(entry.entryType); index += 1) {
+          ticketPool.push(entry);
+        }
+      });
+
+      if (ticketPool.length === 0) return null;
+      return ticketPool[Math.floor(Math.random() * ticketPool.length)];
+    }
+
+    async function resetContestEntries() {
+      await clearSharedEntries();
+    }
+
+    form.addEventListener("submit", async event => {
+      event.preventDefault();
+      const candidate = getFormEntry();
+      const duplicateCount = findDuplicates(candidate).length;
+
+      if (duplicateCount > 0) {
+        alert("This entry matches or nearly matches an existing entry. It was not submitted. Manager review is required.");
+        return;
+      }
+
+      if (!fields.proofPhoto.files[0]) {
+        alert("A proof photo is required.");
+        return;
+      }
+
+      const submitButton = form.querySelector("button[type='submit']");
+      submitButton.disabled = true;
+      submitButton.textContent = "Submitting...";
+
+      let entry;
+      try {
+        const photoData = await resizePhoto(fields.proofPhoto.files[0]);
+        entry = getFormEntry();
+        entry.proofPhoto = await uploadProofPhoto(photoData, entry.id);
+        await saveSharedEntry(entry);
+      } catch (error) {
+        console.error(error);
+        alert("The entry could not be saved to Firebase. Confirm Firestore and Storage are enabled, then try again.");
+        submitButton.disabled = false;
+        submitButton.textContent = "Submit";
+        return;
+      }
+
+      safeLocalSet(porterNameKey, entry.porterName);
+      form.reset();
+      fields.porterName.value = safeLocalGet(porterNameKey) || "";
+      dupeStatus.className = "status";
+      showPhotoPreview(null);
+      submitButton.disabled = false;
+      submitButton.textContent = "Submit";
+    });
+
+    document.getElementById("clearForm").addEventListener("click", () => {
+      form.reset();
+      dupeStatus.className = "status";
+      showPhotoPreview(null);
+      fields.porterName.focus();
+    });
+
+    document.getElementById("clearAll").addEventListener("click", () => {
+      if (!entries.length) return;
+      if (!managerUnlocked("clear all entries")) return;
+      if (confirm("Clear all contest entries from the shared tracker?")) {
+        resetContestEntries().catch(error => {
+          console.error(error);
+          alert("Could not clear the shared tracker. Check Firebase permissions.");
+        });
+      }
+    });
+
+    document.getElementById("drawWinner").addEventListener("click", () => {
+      if (!entries.length) {
+        alert("There are no entries to draw from.");
+        return;
+      }
+
+      if (!managerUnlocked("draw a winner")) return;
+      if (!confirm("Draw one winner from the current ticket pool?")) return;
+
+      const winner = drawWeightedWinner();
+      if (!winner) return;
+
+      const winnerMessage = `${winner.porterName} won with a ${winner.entryType} entry. Tag ${winner.tagNumber || "N/A"}, VIN ${winner.vinLast8 || "N/A"}.`;
+      drawResult.innerHTML = `
+        Winner Drawn
+        <strong>${escapeHtml(winner.porterName)}</strong>
+        ${escapeHtml(winner.entryType)} entry | Tag ${escapeHtml(winner.tagNumber || "N/A")} | VIN ${escapeHtml(winner.vinLast8 || "N/A")} | ${ticketsFor(winner.entryType)} ticket${ticketsFor(winner.entryType) === 1 ? "" : "s"}
+      `;
+      drawResult.classList.add("show");
+      drawResult.scrollIntoView({ behavior: "smooth", block: "center" });
+      alert(`Winner drawn:\n\n${winnerMessage}`);
+
+      if (confirm("Winner drawn. Do you want to reset the contest entries now?")) {
+        if (confirm("Final confirmation: clear all entries for the next contest?")) {
+          resetContestEntries().catch(error => {
+            console.error(error);
+            alert("Could not clear the shared tracker. Check Firebase permissions.");
+          });
+        }
+      }
+    });
+
+    entryRows.addEventListener("click", event => {
+      const id = event.target.getAttribute("data-delete");
+      if (!id) return;
+      if (!managerUnlocked("delete an entry")) return;
+      if (confirm("Delete this entry?")) {
+        deleteSharedEntry(id).catch(error => {
+          console.error(error);
+          alert("Could not delete this entry. Check Firebase permissions.");
+        });
+      }
+    });
+
+    Object.values(fields).forEach(field => {
+      field.addEventListener("input", updateDuplicateStatus);
+      field.addEventListener("change", updateDuplicateStatus);
+    });
+
+    fields.proofPhoto.addEventListener("change", () => {
+      showPhotoPreview(fields.proofPhoto.files[0]);
+    });
+
+    openBrowserButton.addEventListener("click", openCurrentLinkExternally);
+    copyLinkButton.addEventListener("click", copyCurrentLink);
+
+    searchBox.addEventListener("input", renderRows);
+
+    async function initApp() {
+      showBrowserWarningIfNeeded();
+      fields.porterName.value = safeLocalGet(porterNameKey) || "";
+      setSaveStatus("Connecting to shared Firebase raffle tracker...", "warn");
+      listenForSharedEntries();
+      renderRows();
+    }
+
+    initApp();
+  </script>
+</body>
+</html>
