@@ -341,26 +341,6 @@
       display: none;
     }
 
-    .photo-preview {
-      display: none;
-      width: 100%;
-      max-height: 170px;
-      object-fit: cover;
-      border: 1px solid var(--line);
-      border-radius: 6px;
-      background: #eef2f5;
-    }
-
-    .photo-preview.show {
-      display: block;
-    }
-
-    .photo-link {
-      color: var(--blue);
-      font-weight: 700;
-      text-decoration: none;
-    }
-
     .draw-result {
       display: none;
       margin: 0 0 14px;
@@ -618,14 +598,13 @@
           </div>
 
           <label>
-            Proof / Notes
-            <textarea id="proofNotes" name="proofNotes" placeholder="Optional: tire issue or advisor"></textarea>
+            Tire Measurement
+            <input id="tireMeasurement" name="tireMeasurement" autocomplete="off" placeholder="Ex: 4/32 front right" required>
           </label>
 
           <label>
-            Proof Photo
-            <input id="proofPhoto" name="proofPhoto" type="file" accept="image/*" capture="environment" required>
-            <img id="photoPreview" class="photo-preview" alt="Proof photo preview">
+            Notes
+            <textarea id="proofNotes" name="proofNotes" placeholder="Optional: tire issue or advisor"></textarea>
           </label>
 
           <div class="status" id="dupeStatus"></div>
@@ -661,8 +640,8 @@
                 <th>RO</th>
                 <th>Tag</th>
                 <th>Last 8 VIN</th>
-                <th>Proof / Notes</th>
-                <th>Photo</th>
+                <th>Tire Measurement</th>
+                <th>Notes</th>
                 <th></th>
               </tr>
             </thead>
@@ -713,8 +692,8 @@
       tagNumber: document.getElementById("tagNumber"),
       vinLast8: document.getElementById("vinLast8"),
       entryType: document.getElementById("entryType"),
-      proofNotes: document.getElementById("proofNotes"),
-      proofPhoto: document.getElementById("proofPhoto")
+      tireMeasurement: document.getElementById("tireMeasurement"),
+      proofNotes: document.getElementById("proofNotes")
     };
 
     const form = document.getElementById("entryForm");
@@ -725,7 +704,6 @@
     const leaderboard = document.getElementById("leaderboard");
     const searchBox = document.getElementById("searchBox");
     const importFile = document.getElementById("importFile");
-    const photoPreview = document.getElementById("photoPreview");
     const drawResult = document.getElementById("drawResult");
     const saveStatus = document.getElementById("saveStatus");
     const browserWarning = document.getElementById("browserWarning");
@@ -897,15 +875,14 @@
 
       try {
         await dbSet(storageKey, entries);
-        safeLocalSet(storageKey, JSON.stringify(entries.map(entry => ({ ...entry, proofPhoto: "" }))));
+        safeLocalSet(storageKey, JSON.stringify(entries));
         setSaveStatus("Saved on this phone.");
         return true;
       } catch {
-        const slimEntries = entries.map(entry => ({ ...entry, proofPhoto: "" }));
-        const savedLocal = safeLocalSet(storageKey, JSON.stringify(slimEntries));
+        const savedLocal = safeLocalSet(storageKey, JSON.stringify(entries));
         setSaveStatus(
           savedLocal
-            ? "Saved without photos in fallback storage. Open in browser for the most reliable version."
+            ? "Saved in fallback storage. Open in browser for the most reliable version."
             : "Not saved by this Teams phone preview. Open this file in Safari/Chrome before using it.",
           savedLocal ? "warn" : "stop"
         );
@@ -977,8 +954,6 @@
     }
 
     function getFormEntry() {
-      const photoFile = fields.proofPhoto.files && fields.proofPhoto.files[0];
-
       return {
         id: window.crypto && crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
         date: new Date().toLocaleDateString(),
@@ -988,9 +963,8 @@
         tagNumber: normalize(fields.tagNumber.value),
         vinLast8: normalize(fields.vinLast8.value),
         entryType: fields.entryType.value,
+        tireMeasurement: clean(fields.tireMeasurement.value),
         proofNotes: clean(fields.proofNotes.value),
-        proofAttached: Boolean(photoFile),
-        proofPhotoName: photoFile ? photoFile.name : "",
         reviewStatus: "Pending manager review"
       };
     }
@@ -1061,7 +1035,7 @@
       }
 
       if (matches.length === 0) {
-        dupeStatus.textContent = "No matching tag, VIN, or RO found. This entry can be submitted with required photo proof.";
+        dupeStatus.textContent = "No matching tag, VIN, or RO found. This entry can be submitted with a tire measurement.";
         dupeStatus.classList.add("show", "ok");
         return;
       }
@@ -1131,8 +1105,8 @@
             <td data-label="RO">${escapeHtml(entry.roNumber)}</td>
             <td data-label="Tag">${escapeHtml(entry.tagNumber)}</td>
             <td data-label="VIN">${escapeHtml(entry.vinLast8)}</td>
+            <td data-label="Measurement">${escapeHtml(entry.tireMeasurement || "")}</td>
             <td data-label="Notes">${escapeHtml(entry.proofNotes)}</td>
-            <td data-label="Photo">${entry.proofAttached || entry.proofPhoto ? "Attached" : ""}</td>
             <td data-label="Action"><button type="button" class="secondary" data-delete="${entry.id}">Delete</button></td>
           </tr>
         `;
@@ -1183,7 +1157,7 @@
     }
 
     function toCsv() {
-      const headers = ["Date", "Porter Name", "Entry Type", "Tickets", "RO Number", "Tag Number", "Last 8 VIN", "Proof / Notes", "Review Status", "Photo Attached"];
+      const headers = ["Date", "Porter Name", "Entry Type", "Tickets", "RO Number", "Tag Number", "Last 8 VIN", "Tire Measurement", "Proof / Notes", "Review Status"];
       const rows = entries.map(entry => [
         entry.date,
         entry.porterName,
@@ -1192,51 +1166,15 @@
         entry.roNumber,
         entry.tagNumber,
         entry.vinLast8,
+        entry.tireMeasurement || "",
         entry.proofNotes,
-        entry.reviewStatus || "Pending manager review",
-        entry.proofAttached || entry.proofPhoto ? "Yes" : "No"
+        entry.reviewStatus || "Pending manager review"
       ]);
 
       return [headers, ...rows].map(row => row.map(value => {
         const text = String(value || "");
         return /[",\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
       }).join(",")).join("\n");
-    }
-
-    function resizePhoto(file) {
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onerror = () => reject(new Error("Could not read photo."));
-        reader.onload = () => {
-          const image = new Image();
-          image.onerror = () => reject(new Error("Could not load photo."));
-          image.onload = () => {
-            const maxSide = 360;
-            const scale = Math.min(1, maxSide / Math.max(image.width, image.height));
-            const canvas = document.createElement("canvas");
-            canvas.width = Math.max(1, Math.round(image.width * scale));
-            canvas.height = Math.max(1, Math.round(image.height * scale));
-            const context = canvas.getContext("2d");
-            context.drawImage(image, 0, 0, canvas.width, canvas.height);
-            resolve(canvas.toDataURL("image/jpeg", .42));
-          };
-          image.src = reader.result;
-        };
-        reader.readAsDataURL(file);
-      });
-    }
-
-    function showPhotoPreview(file) {
-      if (!file) {
-        photoPreview.removeAttribute("src");
-        photoPreview.classList.remove("show");
-        return;
-      }
-
-      const url = URL.createObjectURL(file);
-      photoPreview.src = url;
-      photoPreview.classList.add("show");
-      photoPreview.onload = () => URL.revokeObjectURL(url);
     }
 
     function drawWeightedWinner() {
@@ -1271,8 +1209,9 @@
         return;
       }
 
-      if (!fields.proofPhoto.files[0]) {
-        alert("A proof photo is required.");
+      if (!candidate.tireMeasurement) {
+        alert("Tire measurement is required.");
+        fields.tireMeasurement.focus();
         return;
       }
 
@@ -1300,7 +1239,6 @@
       fields.porterName.value = safeLocalGet(porterNameKey) || "";
       updateRoAvailability();
       dupeStatus.className = "status";
-      showPhotoPreview(null);
       setSaveStatus("Entry saved to shared Firebase raffle tracker.");
     });
 
@@ -1308,7 +1246,6 @@
       form.reset();
       updateRoAvailability();
       dupeStatus.className = "status";
-      showPhotoPreview(null);
       fields.porterName.focus();
     });
 
@@ -1375,10 +1312,6 @@
     fields.entryType.addEventListener("change", () => {
       updateRoAvailability();
       updateDuplicateStatus();
-    });
-
-    fields.proofPhoto.addEventListener("change", () => {
-      showPhotoPreview(fields.proofPhoto.files[0]);
     });
 
     openBrowserButton.addEventListener("click", openCurrentLinkExternally);
