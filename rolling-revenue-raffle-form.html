@@ -687,12 +687,6 @@
       query,
       orderBy
     } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
-    import {
-      getStorage,
-      ref as storageRef,
-      uploadString,
-      getDownloadURL
-    } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-storage.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyCcHe75SWk3c1_qLzdoO6LmuSXM50lDS-8",
@@ -706,7 +700,6 @@
 
     const firebaseApp = initializeApp(firebaseConfig);
     const raffleDb = getFirestore(firebaseApp);
-    const raffleStorage = getStorage(firebaseApp);
     const entriesCollection = collection(raffleDb, "raffleEntries");
 
     const storageKey = "rollingRevenueRaffleEntries";
@@ -925,7 +918,7 @@
 
     function describeFirebaseError(error) {
       const code = error && error.code ? ` (${error.code})` : "";
-      return `Firebase could not save/load entries${code}. Check that Firestore and Storage are enabled and that rules allow this app.`;
+      return `Firebase could not save/load entries${code}. Check that Firestore is enabled and that rules allow this app.`;
     }
 
     function listenForSharedEntries() {
@@ -943,12 +936,6 @@
         console.error(error);
         setSaveStatus(describeFirebaseError(error), "stop");
       });
-    }
-
-    async function uploadProofPhoto(photoData, entryId) {
-      const photoRef = storageRef(raffleStorage, `proof-photos/${entryId}.jpg`);
-      await uploadString(photoRef, photoData, "data_url");
-      return getDownloadURL(photoRef);
     }
 
     async function saveSharedEntry(entry) {
@@ -1277,11 +1264,11 @@
       try {
         const photoData = await resizePhoto(fields.proofPhoto.files[0]);
         entry = getFormEntry();
-        entry.proofPhoto = await uploadProofPhoto(photoData, entry.id);
+        entry.proofPhoto = photoData;
         await saveSharedEntry(entry);
       } catch (error) {
         console.error(error);
-        alert("The entry could not be saved to Firebase. Confirm Firestore and Storage are enabled, then try again.");
+        alert("The entry could not be saved to Firebase. Confirm Firestore is enabled and its rules allow this app, then try again.");
         submitButton.disabled = false;
         submitButton.textContent = "Submit";
         return;
