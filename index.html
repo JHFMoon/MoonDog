@@ -606,7 +606,7 @@
           <div class="row">
             <label>
               RO Number
-              <input id="roNumber" name="roNumber" inputmode="numeric" autocomplete="off" placeholder="Optional">
+              <input id="roNumber" name="roNumber" inputmode="numeric" autocomplete="off" placeholder="Required for sales" disabled>
             </label>
             <label>
               Entry Type
@@ -965,6 +965,17 @@
       return type === "Sale" ? 2 : 1;
     }
 
+    function updateRoAvailability() {
+      const isSale = fields.entryType.value === "Sale";
+      fields.roNumber.disabled = !isSale;
+      fields.roNumber.required = isSale;
+      fields.roNumber.placeholder = isSale ? "RO required for sale" : "Quotes do not use RO";
+
+      if (!isSale) {
+        fields.roNumber.value = "";
+      }
+    }
+
     function getFormEntry(photoData = "") {
       return {
         id: window.crypto && crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
@@ -1251,6 +1262,12 @@
         return;
       }
 
+      if (candidate.entryType === "Sale" && !candidate.roNumber) {
+        alert("RO number is required for sale entries.");
+        fields.roNumber.focus();
+        return;
+      }
+
       if (!fields.proofPhoto.files[0]) {
         alert("A proof photo is required.");
         return;
@@ -1280,12 +1297,14 @@
       safeLocalSet(porterNameKey, entry.porterName);
       form.reset();
       fields.porterName.value = safeLocalGet(porterNameKey) || "";
+      updateRoAvailability();
       dupeStatus.className = "status";
       showPhotoPreview(null);
     });
 
     document.getElementById("clearForm").addEventListener("click", () => {
       form.reset();
+      updateRoAvailability();
       dupeStatus.className = "status";
       showPhotoPreview(null);
       fields.porterName.focus();
@@ -1351,6 +1370,11 @@
       field.addEventListener("change", updateDuplicateStatus);
     });
 
+    fields.entryType.addEventListener("change", () => {
+      updateRoAvailability();
+      updateDuplicateStatus();
+    });
+
     fields.proofPhoto.addEventListener("change", () => {
       showPhotoPreview(fields.proofPhoto.files[0]);
     });
@@ -1363,6 +1387,7 @@
     async function initApp() {
       showBrowserWarningIfNeeded();
       fields.porterName.value = safeLocalGet(porterNameKey) || "";
+      updateRoAvailability();
       setSaveStatus("Connecting to shared Firebase raffle tracker...", "warn");
       listenForSharedEntries();
       renderRows();
