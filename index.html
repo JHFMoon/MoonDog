@@ -386,6 +386,31 @@
       color: var(--red);
     }
 
+    .connection-lock {
+      margin: 0 0 14px;
+      padding: 12px;
+      border: 1px solid #e6c36d;
+      border-radius: 6px;
+      background: var(--gold-soft);
+      color: #513316;
+      font-size: 14px;
+      line-height: 1.4;
+    }
+
+    .connection-lock strong {
+      display: block;
+      color: var(--ink);
+      margin-bottom: 4px;
+    }
+
+    .connection-lock.hide {
+      display: none;
+    }
+
+    .form-panel.connecting form {
+      opacity: .62;
+    }
+
     .browser-warning {
       display: none;
       margin: 0 0 14px;
@@ -566,6 +591,10 @@
     <div class="layout">
       <section class="form-panel" aria-labelledby="formTitle">
         <h2 id="formTitle">Add Opportunity</h2>
+        <div id="connectionLock" class="connection-lock" aria-live="polite">
+          <strong>Waiting for the shared raffle tracker.</strong>
+          Entries cannot be typed until Firebase loads the current contest log. This prevents duplicate or unsaved submissions.
+        </div>
         <form id="entryForm">
           <label>
             Porter Name
@@ -680,6 +709,7 @@
       setDoc,
       deleteDoc,
       getDocs,
+      getDocsFromServer,
       getDocFromServer,
       onSnapshot,
       query,
@@ -716,6 +746,8 @@
     };
 
     const form = document.getElementById("entryForm");
+    const formPanel = document.querySelector(".form-panel");
+    const connectionLock = document.getElementById("connectionLock");
     const dupeStatus = document.getElementById("dupeStatus");
     const entryRows = document.getElementById("entryRows");
     const emptyState = document.getElementById("emptyState");
@@ -731,6 +763,8 @@
 
     let entries = [];
     let dbPromise = null;
+    let trackerReady = false;
+    let unsubscribeSharedEntries = null;
     const memoryStore = {};
 
     function clean(value) {
@@ -783,6 +817,20 @@
     function setSaveStatus(message, level = "ok") {
       saveStatus.textContent = message;
       saveStatus.className = `save-status ${level === "ok" ? "" : level}`;
+    }
+
+    function setFormEnabled(enabled) {
+      trackerReady = enabled;
+      formPanel.classList.toggle("connecting", !enabled);
+      connectionLock.classList.toggle("hide", enabled);
+
+      form.querySelectorAll("input, select, textarea, button").forEach(control => {
+        control.disabled = !enabled;
+      });
+
+      if (enabled) {
+        updateRoAvailability();
+      }
     }
 
     function safeLocalGet(key) {
@@ -917,12 +965,28 @@
       return `Firebase could not save/load entries${code}. Check that Firestore is enabled and that rules allow this app.`;
     }
 
+    async function loadConfirmedEntriesFromServer() {
+      const entriesQuery = query(entriesCollection, orderBy("timestamp", "desc"));
+      const snapshot = await withTimeout(
+        getDocsFromServer(entriesQuery),
+        15000,
+        "Firebase did not load the contest log from the server. Check the connection and refresh."
+      );
+
+      entries = snapshot.docs.map(entryDoc => ({
+        id: entryDoc.id,
+        ...entryDoc.data()
+      }));
+    }
+
     function listenForSharedEntries() {
       const entriesQuery = query(entriesCollection, orderBy("timestamp", "desc"));
 
       return onSnapshot(entriesQuery, { includeMetadataChanges: true }, snapshot => {
         if (snapshot.metadata.fromCache) {
-          setSaveStatus("Connecting to shared Firebase raffle tracker...", "warn");
+          if (!trackerReady) {
+            setSaveStatus("Connecting to shared Firebase raffle tracker...", "warn");
+          }
           return;
         }
 
@@ -1247,6 +1311,12 @@
 
     form.addEventListener("submit", async event => {
       event.preventDefault();
+
+      if (!trackerReady) {
+        alert("The shared raffle tracker is still loading. Wait for the contest log to appear before submitting.");
+        return;
+      }
+
       const candidate = getFormEntry();
       const duplicateCount = findDuplicates(candidate).length;
 
@@ -1372,10 +1442,22 @@
     async function initApp() {
       showBrowserWarningIfNeeded();
       fields.porterName.value = safeLocalGet(porterNameKey) || "";
-      updateRoAvailability();
+      setFormEnabled(false);
       setSaveStatus("Connecting to shared Firebase raffle tracker...", "warn");
-      listenForSharedEntries();
-      renderRows();
+
+      try {
+        await loadConfirmedEntriesFromServer();
+        renderRows();
+        setFormEnabled(true);
+        setSaveStatus("Contest log loaded. Ready for entries.");
+        unsubscribeSharedEntries = listenForSharedEntries();
+      } catch (error) {
+        console.error(error);
+        setFormEnabled(false);
+        setSaveStatus(describeFirebaseError(error), "stop");
+        emptyState.textContent = "Contest log could not be loaded. Refresh after checking Firebase.";
+        renderRows();
+      }
     }
 
     initApp();
