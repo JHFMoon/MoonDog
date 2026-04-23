@@ -6,21 +6,21 @@
   <title>Raffle Tracker</title>
   <style>
     :root {
-      color-scheme: light;
-      --ink: #172026;
-      --muted: #5f6f7a;
-      --line: #d6dde2;
-      --paper: #f7f9fb;
-      --panel: #ffffff;
-      --green: #177245;
-      --green-soft: #e7f4ed;
-      --gold: #b7791f;
-      --gold-soft: #fff4d9;
-      --red: #b42318;
-      --red-soft: #ffe8e5;
-      --blue: #2563eb;
-      --blue-soft: #e9f0ff;
-      --shadow: 0 10px 28px rgba(23, 32, 38, .08);
+      color-scheme: dark;
+      --ink: #f4f6f8;
+      --muted: #a6adb7;
+      --line: #30343b;
+      --paper: #08090b;
+      --panel: #14171c;
+      --green: #24b36b;
+      --green-soft: #10261c;
+      --gold: #f2bd42;
+      --gold-soft: #302511;
+      --red: #ff6f66;
+      --red-soft: #301817;
+      --blue: #85aaff;
+      --blue-soft: #121d35;
+      --shadow: 0 16px 38px rgba(0, 0, 0, .36);
     }
 
     * {
@@ -32,14 +32,14 @@
       min-height: 100vh;
       font-family: "Segoe UI", Arial, sans-serif;
       color: var(--ink);
-      background: linear-gradient(180deg, #f3f6f8 0%, #edf2f5 100%);
+      background: #08090b;
     }
 
     header {
-      background: #172026;
+      background: #0d0f13;
       color: #fff;
       padding: 18px clamp(14px, 4vw, 48px);
-      border-bottom: 5px solid #d5a028;
+      border-bottom: 1px solid #30343b;
     }
 
     .topline {
@@ -70,7 +70,7 @@
       border: 1px solid rgba(255, 255, 255, .18);
       border-radius: 8px;
       text-align: center;
-      background: rgba(255, 255, 255, .08);
+      background: #171b21;
     }
 
     .ticket-total strong {
@@ -128,11 +128,11 @@
     select,
     textarea {
       width: 100%;
-      border: 1px solid #bfc9d0;
+      border: 1px solid #363b44;
       border-radius: 6px;
       padding: 13px 12px;
       color: var(--ink);
-      background: #fff;
+      background: #0d0f13;
       font: 16px "Segoe UI", Arial, sans-serif;
       min-height: 50px;
     }
@@ -168,9 +168,9 @@
     }
 
     .status.ok {
-      color: #14532d;
+      color: #7ee2a8;
       background: var(--green-soft);
-      border: 1px solid #a7d8bd;
+      border: 1px solid #236440;
     }
 
     .status.warn {
@@ -209,7 +209,7 @@
 
     .secondary {
       color: var(--ink);
-      background: #e8edf1;
+      background: #252a32;
     }
 
     .danger {
@@ -224,7 +224,7 @@
       justify-content: space-between;
       padding: 14px;
       border-bottom: 1px solid var(--line);
-      background: #fbfcfd;
+      background: #171b21;
       border-radius: 8px 8px 0 0;
     }
 
@@ -252,14 +252,14 @@
     td {
       padding: 11px 12px;
       text-align: left;
-      border-bottom: 1px solid #e3e8ec;
+      border-bottom: 1px solid #252a32;
       vertical-align: top;
       font-size: 14px;
     }
 
     th {
-      color: #465862;
-      background: #f4f7f9;
+      color: #c2c8d0;
+      background: #1b2028;
       font-size: 12px;
       text-transform: uppercase;
       letter-spacing: .04em;
@@ -277,12 +277,12 @@
     }
 
     .quote {
-      color: #1d4ed8;
+      color: #a8c2ff;
       background: var(--blue-soft);
     }
 
     .sale {
-      color: #14532d;
+      color: #7ee2a8;
       background: var(--green-soft);
     }
 
@@ -299,7 +299,7 @@
     }
 
     .leader {
-      background: #fff;
+      background: var(--panel);
       border: 1px solid var(--line);
       border-radius: 8px;
       padding: 12px;
@@ -369,7 +369,7 @@
       border-radius: 6px;
       border: 1px solid #a7d8bd;
       background: var(--green-soft);
-      color: #14532d;
+      color: #7ee2a8;
       font-size: 13px;
       line-height: 1.35;
     }
@@ -393,7 +393,7 @@
       object-fit: cover;
       border: 1px solid var(--line);
       border-radius: 6px;
-      background: #eef2f5;
+      background: #0d0f13;
     }
 
     .photo-preview.show {
@@ -480,13 +480,13 @@
 
     @media (max-width: 640px) {
       :root {
-        --ink: #eef6f4;
-        --muted: #9fb3ad;
-        --line: #263a36;
-        --paper: #07110f;
-        --panel: #101c19;
-        --green: #20a365;
-        --green-soft: #0d2d22;
+        --ink: #f4f6f8;
+        --muted: #a6adb7;
+        --line: #30343b;
+        --paper: #08090b;
+        --panel: #14171c;
+        --green: #24b36b;
+        --green-soft: #10261c;
         --gold: #f0bd42;
         --gold-soft: #342711;
         --red: #ff7267;
@@ -497,13 +497,13 @@
       }
 
       body {
-        background: #07110f;
+        background: #08090b;
       }
 
       header {
         padding: calc(12px + env(safe-area-inset-top)) 16px 14px;
-        border-bottom: 1px solid #2b443c;
-        background: #0a1714;
+        border-bottom: 1px solid #30343b;
+        background: #0d0f13;
       }
 
       h1 {
@@ -527,9 +527,9 @@
         min-width: 0;
         padding: 11px 14px;
         text-align: left;
-        border-color: #2b443c;
+        border-color: #30343b;
         border-radius: 999px;
-        background: #12231f;
+        background: #171b21;
       }
 
       .ticket-total strong {
@@ -546,9 +546,9 @@
       }
 
       section {
-        border-color: #263a36;
+        border-color: #30343b;
         border-radius: 18px;
-        background: #101c19;
+        background: #14171c;
       }
 
       .leaderboard {
@@ -564,9 +564,9 @@
         flex: 0 0 78%;
         min-height: 86px;
         padding: 13px 15px;
-        border-color: #263a36;
+        border-color: #30343b;
         border-radius: 18px;
-        background: #101c19;
+        background: #14171c;
         scroll-snap-align: start;
       }
 
@@ -597,33 +597,33 @@
       label {
         gap: 7px;
         font-size: 13px;
-        color: #bfd1cc;
+        color: #c2c8d0;
       }
 
       input,
       select,
       textarea {
         min-height: 58px;
-        border-color: #2f4741;
+        border-color: #363b44;
         border-radius: 18px;
         padding: 15px 16px;
-        color: #f5fbf9;
-        background: #07110f;
+        color: #f4f6f8;
+        background: #0d0f13;
         font-size: 17px;
       }
 
       input::placeholder,
       textarea::placeholder {
-        color: #728983;
+        color: #7f8792;
         opacity: 1;
       }
 
       input:disabled,
       select:disabled,
       textarea:disabled {
-        color: #7b8f89;
-        background: #0d1714;
-        border-color: #1d2d29;
+        color: #7f8792;
+        background: #111318;
+        border-color: #252a32;
       }
 
       input:focus,
@@ -677,8 +677,8 @@
       }
 
       .secondary {
-        color: #e8f2ee;
-        background: #243631;
+        color: #f4f6f8;
+        background: #252a32;
       }
 
       .danger {
@@ -691,8 +691,8 @@
         grid-template-columns: 1fr;
         padding: 14px;
         gap: 12px;
-        background: #101c19;
-        border-bottom-color: #263a36;
+        background: #14171c;
+        border-bottom-color: #30343b;
         border-radius: 18px 18px 0 0;
       }
 
@@ -729,9 +729,9 @@
       }
 
       tr {
-        border: 1px solid #263a36;
+        border: 1px solid #30343b;
         border-radius: 18px;
-        background: #101c19;
+        background: #14171c;
         overflow: hidden;
       }
 
@@ -740,7 +740,7 @@
         grid-template-columns: 112px minmax(0, 1fr);
         gap: 12px;
         padding: 12px 13px;
-        border-bottom: 1px solid #1f322e;
+        border-bottom: 1px solid #252a32;
         word-break: break-word;
         font-size: 15px;
       }
@@ -763,7 +763,7 @@
 
       .note {
         font-size: 13px;
-        color: #8fa49e;
+        color: #a6adb7;
       }
     }
 
