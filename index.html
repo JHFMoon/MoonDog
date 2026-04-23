@@ -942,6 +942,15 @@
       await setDoc(doc(entriesCollection, entry.id), entry);
     }
 
+    function withTimeout(promise, milliseconds, message) {
+      return Promise.race([
+        promise,
+        new Promise((_, reject) => {
+          setTimeout(() => reject(new Error(message)), milliseconds);
+        })
+      ]);
+    }
+
     async function deleteSharedEntry(entryId) {
       await deleteDoc(doc(entriesCollection, entryId));
     }
@@ -1197,14 +1206,14 @@
           const image = new Image();
           image.onerror = () => reject(new Error("Could not load photo."));
           image.onload = () => {
-            const maxSide = 760;
+            const maxSide = 360;
             const scale = Math.min(1, maxSide / Math.max(image.width, image.height));
             const canvas = document.createElement("canvas");
             canvas.width = Math.max(1, Math.round(image.width * scale));
             canvas.height = Math.max(1, Math.round(image.height * scale));
             const context = canvas.getContext("2d");
             context.drawImage(image, 0, 0, canvas.width, canvas.height);
-            resolve(canvas.toDataURL("image/jpeg", .62));
+            resolve(canvas.toDataURL("image/jpeg", .42));
           };
           image.src = reader.result;
         };
@@ -1265,13 +1274,14 @@
         const photoData = await resizePhoto(fields.proofPhoto.files[0]);
         entry = getFormEntry();
         entry.proofPhoto = photoData;
-        await saveSharedEntry(entry);
+        await withTimeout(saveSharedEntry(entry), 12000, "Firebase save timed out.");
       } catch (error) {
         console.error(error);
-        alert("The entry could not be saved to Firebase. Confirm Firestore is enabled and its rules allow this app, then try again.");
+        alert(`The entry could not be saved to Firebase.\n\n${error.message || "Confirm Firestore is enabled and its rules allow this app, then try again."}`);
+        return;
+      } finally {
         submitButton.disabled = false;
         submitButton.textContent = "Submit";
-        return;
       }
 
       safeLocalSet(porterNameKey, entry.porterName);
@@ -1279,8 +1289,6 @@
       fields.porterName.value = safeLocalGet(porterNameKey) || "";
       dupeStatus.className = "status";
       showPhotoPreview(null);
-      submitButton.disabled = false;
-      submitButton.textContent = "Submit";
     });
 
     document.getElementById("clearForm").addEventListener("click", () => {
