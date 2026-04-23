@@ -180,6 +180,13 @@
       gap: 10px;
     }
 
+    .size-format-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
     .tire-service-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -503,18 +510,24 @@
       color: var(--red);
     }
 
-    .photo-preview {
+    .photo-preview-grid {
       display: none;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
       width: 100%;
-      max-height: 150px;
-      object-fit: cover;
-      border: 1px solid var(--line);
-      border-radius: 6px;
-      background: #0d0f13;
     }
 
-    .photo-preview.show {
-      display: block;
+    .photo-preview-grid.show {
+      display: grid;
+    }
+
+    .photo-preview {
+      width: 100%;
+      height: 110px;
+      object-fit: cover;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: #0d0f13;
     }
 
     .photo-link {
@@ -1020,8 +1033,17 @@
 
           <div class="quote-group quote-only">
             <div class="quote-group-title">Tire Size</div>
-            <div class="tire-size-grid">
+            <div class="size-format-grid">
               <label>
+                Size Format
+                <select id="sizeFormat" name="sizeFormat" required>
+                  <option value="Metric">Metric</option>
+                  <option value="Imperial">Imperial / Flotation</option>
+                </select>
+              </label>
+            </div>
+            <div class="tire-size-grid">
+              <label class="metric-size-field">
                 P / LT
                 <select id="tireClass" name="tireClass" required>
                   <option value="">P/LT</option>
@@ -1029,7 +1051,7 @@
                   <option value="LT">LT</option>
                 </select>
               </label>
-              <label>
+              <label class="metric-size-field">
                 Width
                 <select id="sectionWidth" name="sectionWidth" required>
                   <option value="">Width</option>
@@ -1055,7 +1077,7 @@
                 <option value="335">335</option>
                 </select>
               </label>
-              <label>
+              <label class="metric-size-field">
                 Ratio
                 <select id="aspectRatio" name="aspectRatio" required>
                   <option value="">Ratio</option>
@@ -1074,7 +1096,7 @@
                 <option value="85">85</option>
                 </select>
               </label>
-              <label>
+              <label class="metric-size-field">
                 Rim
                 <select id="rimSize" name="rimSize" required>
                   <option value="">Rim</option>
@@ -1091,6 +1113,62 @@
                 <option value="22">22</option>
                 <option value="23">23</option>
                 <option value="24">24</option>
+                </select>
+              </label>
+              <label class="imperial-size-field hidden">
+                Diameter
+                <select id="overallDiameter" name="overallDiameter">
+                  <option value="">Diameter</option>
+                  <option value="27">27</option>
+                  <option value="28">28</option>
+                  <option value="29">29</option>
+                  <option value="30">30</option>
+                  <option value="31">31</option>
+                  <option value="32">32</option>
+                  <option value="33">33</option>
+                  <option value="34">34</option>
+                  <option value="35">35</option>
+                  <option value="37">37</option>
+                  <option value="38">38</option>
+                  <option value="40">40</option>
+                </select>
+              </label>
+              <label class="imperial-size-field hidden">
+                Section Width
+                <select id="imperialWidth" name="imperialWidth">
+                  <option value="">Width</option>
+                  <option value="8.5">8.5</option>
+                  <option value="9.5">9.5</option>
+                  <option value="10.5">10.5</option>
+                  <option value="11.5">11.5</option>
+                  <option value="12.5">12.5</option>
+                  <option value="13.5">13.5</option>
+                  <option value="14.5">14.5</option>
+                  <option value="15.5">15.5</option>
+                </select>
+              </label>
+              <label class="imperial-size-field hidden">
+                Construction
+                <select id="imperialConstruction" name="imperialConstruction">
+                  <option value="">Type</option>
+                  <option value="R">Radial (R)</option>
+                  <option value="D">Bias (D)</option>
+                  <option value="B">Belted (B)</option>
+                </select>
+              </label>
+              <label class="imperial-size-field hidden">
+                Rim
+                <select id="imperialRim" name="imperialRim">
+                  <option value="">Rim</option>
+                  <option value="12">12</option>
+                  <option value="13">13</option>
+                  <option value="14">14</option>
+                  <option value="15">15</option>
+                  <option value="16">16</option>
+                  <option value="17">17</option>
+                  <option value="18">18</option>
+                  <option value="20">20</option>
+                  <option value="22">22</option>
                 </select>
               </label>
             </div>
@@ -1193,9 +1271,9 @@
           </div>
 
           <label>
-            <span id="photoLabelText">Proof Photo</span>
-            <input id="proofPhoto" name="proofPhoto" type="file" accept="image/*" capture="environment">
-            <img id="photoPreview" class="photo-preview" alt="Proof photo preview">
+            <span id="photoLabelText">Proof Photos (up to 3)</span>
+            <input id="proofPhoto" name="proofPhoto" type="file" accept="image/*" capture="environment" multiple>
+            <div id="photoPreviewGrid" class="photo-preview-grid"></div>
           </label>
 
           <div class="status" id="dupeStatus"></div>
@@ -1288,10 +1366,15 @@
       vinLast8: document.getElementById("vinLast8"),
       entryType: document.getElementById("entryType"),
       tireMeasurement: document.getElementById("tireMeasurement"),
+      sizeFormat: document.getElementById("sizeFormat"),
       tireClass: document.getElementById("tireClass"),
       sectionWidth: document.getElementById("sectionWidth"),
       aspectRatio: document.getElementById("aspectRatio"),
       rimSize: document.getElementById("rimSize"),
+      overallDiameter: document.getElementById("overallDiameter"),
+      imperialWidth: document.getElementById("imperialWidth"),
+      imperialConstruction: document.getElementById("imperialConstruction"),
+      imperialRim: document.getElementById("imperialRim"),
       speedRating: document.getElementById("speedRating"),
       loadRating: document.getElementById("loadRating"),
       quoteProvided: document.getElementById("quoteProvided"),
@@ -1308,7 +1391,7 @@
     const leaderboard = document.getElementById("leaderboard");
     const searchBox = document.getElementById("searchBox");
     const importFile = document.getElementById("importFile");
-    const photoPreview = document.getElementById("photoPreview");
+    const photoPreviewGrid = document.getElementById("photoPreviewGrid");
     const drawResult = document.getElementById("drawResult");
     const saveStatus = document.getElementById("saveStatus");
     const browserWarning = document.getElementById("browserWarning");
@@ -1316,6 +1399,8 @@
     const copyLinkButton = document.getElementById("copyLink");
     const photoLabelText = document.getElementById("photoLabelText");
     const quoteOnlyControls = Array.from(document.querySelectorAll(".quote-only"));
+    const metricSizeFields = Array.from(document.querySelectorAll(".metric-size-field"));
+    const imperialSizeFields = Array.from(document.querySelectorAll(".imperial-size-field"));
     const submitButton = form.querySelector("button[type='submit']");
     const clearFormButton = document.getElementById("clearForm");
 
@@ -1579,16 +1664,19 @@
       }
     }
 
-    async function attachProofPhoto(entryId, file) {
-      const photoData = await resizePhoto(file);
+    async function attachProofPhotos(entryId, files) {
+      const limitedFiles = Array.from(files).slice(0, 3);
+      const photoData = await Promise.all(limitedFiles.map(file => resizePhoto(file)));
       await withTimeout(
         setDoc(doc(entriesCollection, entryId), {
-          proofAttached: true,
-          proofPhotoName: file.name,
-          proofPhoto: photoData
+          proofAttached: photoData.length > 0,
+          proofPhotoName: limitedFiles[0] ? limitedFiles[0].name : "",
+          proofPhotoNames: limitedFiles.map(file => file.name),
+          proofPhoto: photoData[0] || "",
+          proofPhotos: photoData
         }, { merge: true }),
         15000,
-        "Entry saved, but the photo attachment did not finish."
+        "Entry saved, but the photo attachments did not finish."
       );
     }
 
@@ -1619,10 +1707,15 @@
       fields.roNumber.value = "";
       fields.entryType.value = "Quote";
       fields.tireMeasurement.value = "";
+      fields.sizeFormat.value = "Metric";
       fields.tireClass.value = "";
       fields.sectionWidth.value = "";
       fields.aspectRatio.value = "";
       fields.rimSize.value = "";
+      fields.overallDiameter.value = "";
+      fields.imperialWidth.value = "";
+      fields.imperialConstruction.value = "";
+      fields.imperialRim.value = "";
       fields.speedRating.value = "";
       fields.loadRating.value = "";
       fields.quoteProvided.value = "";
@@ -1648,13 +1741,19 @@
 
       if (fields.entryType.value === "Quote") {
         fields.tireMeasurement.value = entry.tireMeasurement || "";
+        fields.sizeFormat.value = entry.sizeFormat || (entry.overallDiameter ? "Imperial" : "Metric");
         fields.tireClass.value = entry.tireClass || "";
         fields.sectionWidth.value = entry.sectionWidth || "";
         fields.aspectRatio.value = entry.aspectRatio || "";
         fields.rimSize.value = entry.rimSize || "";
+        fields.overallDiameter.value = entry.overallDiameter || "";
+        fields.imperialWidth.value = entry.imperialWidth || "";
+        fields.imperialConstruction.value = entry.imperialConstruction || "";
+        fields.imperialRim.value = entry.imperialRim || "";
         fields.speedRating.value = entry.speedRating || "";
         fields.loadRating.value = entry.loadRating || "";
         fields.quoteProvided.value = entry.quoteProvided || "";
+        updateSizeFormatRequirements();
       }
 
       fields.proofPhoto.value = "";
@@ -1706,17 +1805,26 @@
       });
     }
 
-    function showPhotoPreview(file) {
-      if (!file) {
-        photoPreview.removeAttribute("src");
-        photoPreview.classList.remove("show");
+    function showPhotoPreview(files) {
+      const selectedFiles = Array.from(files || []).slice(0, 3);
+      photoPreviewGrid.innerHTML = "";
+
+      if (!selectedFiles.length) {
+        photoPreviewGrid.classList.remove("show");
         return;
       }
 
-      const url = URL.createObjectURL(file);
-      photoPreview.src = url;
-      photoPreview.classList.add("show");
-      photoPreview.onload = () => URL.revokeObjectURL(url);
+      selectedFiles.forEach(file => {
+        const url = URL.createObjectURL(file);
+        const image = document.createElement("img");
+        image.src = url;
+        image.alt = "Proof photo preview";
+        image.className = "photo-preview";
+        image.onload = () => URL.revokeObjectURL(url);
+        photoPreviewGrid.appendChild(image);
+      });
+
+      photoPreviewGrid.classList.add("show");
     }
 
     async function deleteSharedEntry(entryId) {
@@ -1746,10 +1854,15 @@
       const isSale = fields.entryType.value === "Sale";
       const quoteFields = [
         fields.tireMeasurement,
+        fields.sizeFormat,
         fields.tireClass,
         fields.sectionWidth,
         fields.aspectRatio,
         fields.rimSize,
+        fields.overallDiameter,
+        fields.imperialWidth,
+        fields.imperialConstruction,
+        fields.imperialRim,
         fields.speedRating,
         fields.loadRating,
         fields.quoteProvided
@@ -1768,15 +1881,38 @@
 
       quoteFields.forEach(field => {
         field.disabled = isSale;
-        field.required = !isSale;
         if (isSale) field.value = "";
       });
 
-      photoLabelText.textContent = isSale ? "RO Photo" : "Proof Photo";
+      photoLabelText.textContent = isSale ? "RO Photos (up to 3)" : "Proof Photos (up to 3)";
 
       if (!isSale) {
         fields.roNumber.value = "";
       }
+
+      updateSizeFormatRequirements();
+    }
+
+    function updateSizeFormatRequirements() {
+      const isSale = fields.entryType.value === "Sale";
+      const isImperial = fields.sizeFormat.value === "Imperial";
+      const metricInputs = [fields.tireClass, fields.sectionWidth, fields.aspectRatio, fields.rimSize];
+      const imperialInputs = [fields.overallDiameter, fields.imperialWidth, fields.imperialConstruction, fields.imperialRim];
+
+      metricSizeFields.forEach(field => field.classList.toggle("hidden", isSale || isImperial));
+      imperialSizeFields.forEach(field => field.classList.toggle("hidden", isSale || !isImperial));
+
+      metricInputs.forEach(field => {
+        field.required = !isSale && !isImperial;
+        field.disabled = isSale || isImperial;
+        if (isSale || isImperial) field.value = "";
+      });
+
+      imperialInputs.forEach(field => {
+        field.required = !isSale && isImperial;
+        field.disabled = isSale || !isImperial;
+        if (isSale || !isImperial) field.value = "";
+      });
     }
 
     function getFormEntry() {
@@ -1795,49 +1931,25 @@
         vinLast8,
         entryType,
         tireMeasurement: clean(fields.tireMeasurement.value),
+        sizeFormat: clean(fields.sizeFormat.value) || "Metric",
         tireClass: clean(fields.tireClass.value),
         sectionWidth: clean(fields.sectionWidth.value),
         aspectRatio: clean(fields.aspectRatio.value),
         rimSize: clean(fields.rimSize.value),
+        overallDiameter: clean(fields.overallDiameter.value),
+        imperialWidth: clean(fields.imperialWidth.value),
+        imperialConstruction: clean(fields.imperialConstruction.value),
+        imperialRim: clean(fields.imperialRim.value),
         speedRating: clean(fields.speedRating.value),
         loadRating: clean(fields.loadRating.value),
         quoteProvided: clean(fields.quoteProvided.value),
         proofAttached: false,
         proofPhotoName: "",
+        proofPhotoNames: [],
         proofPhoto: "",
+        proofPhotos: [],
         reviewStatus: "Pending manager review"
       };
-    }
-
-    function levenshtein(a, b) {
-      if (a === b) return 0;
-      if (!a || !b) return Math.max(a.length, b.length);
-
-      const previous = Array.from({ length: b.length + 1 }, (_, index) => index);
-      const current = Array(b.length + 1);
-
-      for (let i = 1; i <= a.length; i += 1) {
-        current[0] = i;
-        for (let j = 1; j <= b.length; j += 1) {
-          const cost = a[i - 1] === b[j - 1] ? 0 : 1;
-          current[j] = Math.min(
-            current[j - 1] + 1,
-            previous[j] + 1,
-            previous[j - 1] + cost
-          );
-        }
-        previous.splice(0, previous.length, ...current);
-      }
-
-      return previous[b.length];
-    }
-
-    function nearMatch(a, b, maxDistance = 1) {
-      if (!a || !b) return false;
-      const shortest = Math.min(a.length, b.length);
-      if (shortest < 4) return a === b;
-      if (Math.abs(a.length - b.length) > maxDistance) return false;
-      return levenshtein(a, b) <= maxDistance;
     }
 
     function duplicateReasons(candidate, entry) {
@@ -1847,13 +1959,8 @@
       const entryRo = normalize(entry.roNumber);
 
       if (candidate.tagNumber && entryTag === candidate.tagNumber) reasons.push("exact tag");
-      else if (nearMatch(candidate.tagNumber, entryTag)) reasons.push("near tag typo");
-
       if (candidate.vinLast8 && entryVin === candidate.vinLast8) reasons.push("exact VIN");
-      else if (nearMatch(candidate.vinLast8, entryVin)) reasons.push("near VIN typo");
-
       if (candidate.roNumber && entryRo === candidate.roNumber) reasons.push("exact RO");
-      else if (nearMatch(candidate.roNumber, entryRo)) reasons.push("near RO typo");
 
       return reasons;
     }
@@ -1881,7 +1988,7 @@
       }
 
       const first = matches[0].entry;
-      dupeStatus.textContent = `Blocked duplicate or likely typo match (${matches[0].reasons.join(", ")}): ${first.entryType} already entered for tag ${first.tagNumber || "N/A"}, VIN ${first.vinLast8 || "N/A"}, RO ${first.roNumber || "N/A"} by ${first.porterName}. Manager must review outside this form.`;
+      dupeStatus.textContent = `Blocked duplicate (${matches[0].reasons.join(", ")}): ${first.entryType} already entered for tag ${first.tagNumber || "N/A"}, VIN ${first.vinLast8 || "N/A"}, RO ${first.roNumber || "N/A"} by ${first.porterName}.`;
       dupeStatus.classList.add("show", "stop");
     }
 
@@ -1926,12 +2033,33 @@
 
     function formatTireSize(entry) {
       if (!entry || entry.entryType === "Sale") return "";
+      if ((entry.sizeFormat || "Metric") === "Imperial") {
+        const imperialParts = [entry.overallDiameter, entry.imperialWidth, entry.imperialConstruction, entry.imperialRim];
+        if (imperialParts.every(Boolean)) {
+          const service = [entry.speedRating, entry.loadRating].filter(Boolean).join(" ");
+          return `${entry.overallDiameter}x${entry.imperialWidth}${entry.imperialConstruction}${entry.imperialRim}${service ? ` ${service}` : ""}`;
+        }
+        return "";
+      }
+
       const requiredParts = [entry.tireClass, entry.sectionWidth, entry.aspectRatio, entry.rimSize];
       if (requiredParts.every(Boolean)) {
         const service = [entry.speedRating, entry.loadRating].filter(Boolean).join(" ");
         return `${entry.tireClass}${entry.sectionWidth}/${entry.aspectRatio}R${entry.rimSize}${service ? ` ${service}` : ""}`;
       }
       return "";
+    }
+
+    function photoMarkup(entry) {
+      const photos = Array.isArray(entry.proofPhotos) && entry.proofPhotos.length
+        ? entry.proofPhotos
+        : (entry.proofPhoto ? [entry.proofPhoto] : []);
+
+      if (!photos.length) {
+        return entry.proofAttached ? "Attached" : "";
+      }
+
+      return photos.map((photo, index) => `<a class="photo-link" href="${photo}" target="_blank" rel="noopener">View ${index + 1}</a>`).join("<br>");
     }
 
     function searchableEntryText(entry) {
@@ -1946,17 +2074,22 @@
         entry.tagNumber,
         entry.vinLast8,
         entry.tireMeasurement,
+        entry.sizeFormat,
         formatTireSize(entry),
         entry.tireClass,
         entry.sectionWidth,
         entry.aspectRatio,
         entry.rimSize,
+        entry.overallDiameter,
+        entry.imperialWidth,
+        entry.imperialConstruction,
+        entry.imperialRim,
         entry.speedRating,
         entry.loadRating,
         entry.quoteProvided,
         entry.reviewStatus,
         entry.proofPhotoName,
-        entry.proofAttached || entry.proofPhoto ? "photo attached yes" : "photo no"
+        (entry.proofAttached || entry.proofPhoto || (entry.proofPhotos && entry.proofPhotos.length)) ? "photo attached yes" : "photo no"
       ].filter(value => value !== undefined && value !== null && value !== "").join(" ");
     }
 
@@ -1991,7 +2124,7 @@
             <td data-label="Measurement">${escapeHtml(entry.tireMeasurement || "")}</td>
             <td data-label="Tire Size">${escapeHtml(formatTireSize(entry))}</td>
             <td data-label="Quote Printed">${escapeHtml(entry.quoteProvided || "")}</td>
-            <td data-label="Photo">${entry.proofPhoto ? `<a class="photo-link" href="${entry.proofPhoto}" target="_blank" rel="noopener">View</a>` : entry.proofAttached ? "Attached" : ""}</td>
+            <td data-label="Photo">${photoMarkup(entry)}</td>
             <td data-label="Action">
               <button type="button" class="secondary desktop-only" data-edit="${escapeHtml(entry.id)}">Edit</button>
               <button type="button" class="secondary" data-delete="${escapeHtml(entry.id)}">Delete</button>
@@ -2103,7 +2236,7 @@
       const duplicateCount = findDuplicates(candidate).filter(match => match.entry.id !== editingEntryId).length;
 
       if (duplicateCount > 0) {
-        alert("This entry matches or nearly matches an existing entry. It was not submitted. Manager review is required.");
+        alert("This entry exactly matches an existing entry. It was not submitted.");
         return;
       }
 
@@ -2113,12 +2246,24 @@
         return;
       }
 
-      const proofFile = fields.proofPhoto.files && fields.proofPhoto.files[0];
+      const proofFiles = Array.from(fields.proofPhoto.files || []);
 
-      const hasExistingPhoto = Boolean(isEditing && originalEntry && (originalEntry.proofPhoto || originalEntry.proofAttached));
+      if (proofFiles.length > 3) {
+        alert("Please attach no more than 3 photos per submission.");
+        fields.proofPhoto.focus();
+        return;
+      }
 
-      if (candidate.entryType === "Sale" && !proofFile && !hasExistingPhoto) {
-        alert("An RO photo is required for sale involvement entries.");
+      const hasExistingPhoto = Boolean(
+        isEditing && originalEntry && (
+          (originalEntry.proofPhotos && originalEntry.proofPhotos.length)
+          || originalEntry.proofPhoto
+          || originalEntry.proofAttached
+        )
+      );
+
+      if (candidate.entryType === "Sale" && !proofFiles.length && !hasExistingPhoto) {
+        alert("At least 1 RO photo is required for sale involvement entries.");
         fields.proofPhoto.focus();
         return;
       }
@@ -2137,10 +2282,6 @@
         }
 
         const missingQuoteField = [
-          [fields.tireClass, "Passenger / LT is required."],
-          [fields.sectionWidth, "Section width is required."],
-          [fields.aspectRatio, "Aspect ratio is required."],
-          [fields.rimSize, "Rim size is required."],
           [fields.speedRating, "Speed rating is required."],
           [fields.loadRating, "Load rating is required."],
           [fields.quoteProvided, "Quote printed/advisor status is required."]
@@ -2150,6 +2291,34 @@
           alert(missingQuoteField[1]);
           missingQuoteField[0].focus();
           return;
+        }
+
+        if (candidate.sizeFormat === "Imperial") {
+          const missingImperialField = [
+            [fields.overallDiameter, "Imperial diameter is required."],
+            [fields.imperialWidth, "Imperial section width is required."],
+            [fields.imperialConstruction, "Imperial construction type is required."],
+            [fields.imperialRim, "Imperial rim size is required."]
+          ].find(([field]) => !clean(field.value));
+
+          if (missingImperialField) {
+            alert(missingImperialField[1]);
+            missingImperialField[0].focus();
+            return;
+          }
+        } else {
+          const missingMetricField = [
+            [fields.tireClass, "Passenger / LT is required."],
+            [fields.sectionWidth, "Metric section width is required."],
+            [fields.aspectRatio, "Metric aspect ratio is required."],
+            [fields.rimSize, "Metric rim size is required."]
+          ].find(([field]) => !clean(field.value));
+
+          if (missingMetricField) {
+            alert(missingMetricField[1]);
+            missingMetricField[0].focus();
+            return;
+          }
         }
       }
 
@@ -2165,7 +2334,9 @@
           entry.timestamp = originalEntry.timestamp || entry.timestamp;
           entry.proofAttached = originalEntry.proofAttached || false;
           entry.proofPhotoName = originalEntry.proofPhotoName || "";
+          entry.proofPhotoNames = originalEntry.proofPhotoNames || [];
           entry.proofPhoto = originalEntry.proofPhoto || "";
+          entry.proofPhotos = originalEntry.proofPhotos || [];
         }
         await saveSharedEntry(entry);
       } catch (error) {
@@ -2180,13 +2351,13 @@
       resetOpportunityForm();
       setSaveStatus(isEditing ? "Entry updated in shared Firebase raffle tracker." : "Entry saved to shared Firebase raffle tracker.");
 
-      if (proofFile) {
-        setSaveStatus("Entry saved. Attaching proof photo...", "warn");
-        attachProofPhoto(entry.id, proofFile)
-          .then(() => setSaveStatus("Entry and proof photo saved to shared Firebase raffle tracker."))
+      if (proofFiles.length) {
+        setSaveStatus(`Entry saved. Attaching ${proofFiles.length} photo${proofFiles.length === 1 ? "" : "s"}...`, "warn");
+        attachProofPhotos(entry.id, proofFiles)
+          .then(() => setSaveStatus(`Entry and ${proofFiles.length} proof photo${proofFiles.length === 1 ? "" : "s"} saved to shared Firebase raffle tracker.`))
           .catch(error => {
             console.error(error);
-            setSaveStatus("Entry saved, but the proof photo could not be attached. Try a smaller photo next time.", "warn");
+            setSaveStatus("Entry saved, but the proof photos could not be attached. Try smaller photos next time.", "warn");
           });
       }
     });
@@ -2271,8 +2442,19 @@
       updateDuplicateStatus();
     });
 
+    fields.sizeFormat.addEventListener("change", () => {
+      updateSizeFormatRequirements();
+      updateDuplicateStatus();
+    });
+
     fields.proofPhoto.addEventListener("change", () => {
-      showPhotoPreview(fields.proofPhoto.files[0]);
+      if ((fields.proofPhoto.files || []).length > 3) {
+        alert("Please attach no more than 3 photos per submission.");
+        fields.proofPhoto.value = "";
+        showPhotoPreview([]);
+        return;
+      }
+      showPhotoPreview(fields.proofPhoto.files);
     });
 
     openBrowserButton.addEventListener("click", openCurrentLinkExternally);
