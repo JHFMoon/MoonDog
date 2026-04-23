@@ -1693,6 +1693,32 @@
       return "";
     }
 
+    function searchableEntryText(entry) {
+      return [
+        entry.id,
+        entry.date,
+        entry.timestamp,
+        entry.porterName,
+        entry.entryType,
+        ticketsFor(entry.entryType),
+        entry.roNumber,
+        entry.tagNumber,
+        entry.vinLast8,
+        entry.tireMeasurement,
+        formatTireSize(entry),
+        entry.tireClass,
+        entry.sectionWidth,
+        entry.aspectRatio,
+        entry.rimSize,
+        entry.speedRating,
+        entry.loadRating,
+        entry.quoteProvided,
+        entry.reviewStatus,
+        entry.proofPhotoName,
+        entry.proofAttached || entry.proofPhoto ? "photo attached yes" : "photo no"
+      ].filter(value => value !== undefined && value !== null && value !== "").join(" ");
+    }
+
     function renderRows() {
       const query = normalize(searchBox.value);
       const filtered = entries
@@ -1700,7 +1726,7 @@
         .sort((a, b) => String(b.timestamp).localeCompare(String(a.timestamp)))
         .filter(entry => {
           if (!query) return true;
-          return normalize(Object.values(entry).join(" ")).includes(query);
+          return normalize(searchableEntryText(entry)).includes(query);
         });
 
       entryRows.innerHTML = filtered.map(entry => {
